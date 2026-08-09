@@ -41,6 +41,11 @@ The LeetCode integration (both within the extension and any potential API scrapi
 ### 4.2. GitHub Integration Boundary
 The GitHub integration is strictly a server-side responsibility residing in `apps/api`. GitHub OAuth tokens, Personal Access Tokens, and the commit logic will never be exposed to the frontend (`apps/web`) or the browser extension (`apps/extension`).
 
+**Authentication & Configuration Strategy:**
+- *Current development authentication*: Uses a `GITHUB_TOKEN` environment variable loaded into the backend's route handler.
+- *Dependency Injection*: The `GitHubService` does not pull configuration from the global environment. Instead, clients (including HTTP clients and tokens) and repository identifiers are injected into it.
+- *Future production authentication*: Will use GitHub OAuth. The API will store user-specific credentials and repository details securely in the database and inject them into the GitHub service layer per-request.
+
 ### 4.3. AI Service Boundary
 AI processing is abstracted behind an internal interface in the backend. The core logic defines the input (code + problem metadata) and expected output (analysis structure). The actual implementation can easily swap between providers like OpenRouter, Gemini, or OpenAI without affecting the rest of the system.
 
