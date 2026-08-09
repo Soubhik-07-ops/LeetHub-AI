@@ -1,0 +1,16 @@
+{
+  "name": "@leethub-ai/extension",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/chrome": "^0.0.244"
+  },
+  "dependencies": {
+    "@leethub-ai/shared": "*"
+  }
+}

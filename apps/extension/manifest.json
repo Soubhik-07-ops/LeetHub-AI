@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "LeetHub-AI",
+  "version": "0.1.0",
+  "description": "LeetHub-AI Browser Extension",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://leetcode.com/*"
+  ],
+  "background": {
+    "service_worker": "dist/background/index.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://leetcode.com/problems/*"],
+      "js": ["dist/content/index.js"]
+    }
+  ]
+}
