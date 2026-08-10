@@ -3,12 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc && esbuild src/content/index.ts --bundle --outfile=dist/content/index.js --format=iife && node -e \"require('fs').copyFileSync('manifest.json', 'dist/manifest.json')\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@types/chrome": "^0.0.244",
+    "esbuild": "^0.21.5",
     "typescript": "^5.0.0",
-    "@types/chrome": "^0.0.244"
+    "vitest": "^1.0.0"
   },
   "dependencies": {
     "@leethub-ai/shared": "*"
