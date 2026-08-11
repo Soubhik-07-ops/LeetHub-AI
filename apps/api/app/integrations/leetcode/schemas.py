@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from datetime import datetime
 from enum import Enum
 
@@ -22,7 +22,7 @@ class LeetCodeSubmissionRequest(BaseModel):
     problemTitle: str
     status: SubmissionStatus
     source: str
-    sourceCode: str
+    sourceCode: str = Field(..., max_length=102400)
     submittedAt: datetime
     submissionId: str
 

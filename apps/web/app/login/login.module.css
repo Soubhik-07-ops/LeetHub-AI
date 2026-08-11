@@ -3,32 +3,38 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: var(--background);
+  background: var(--bg-base);
   font-family: var(--font-geist-sans);
 }
 
 .card {
-  background: rgba(128, 128, 128, 0.05);
-  border: 1px solid rgba(128, 128, 128, 0.2);
-  border-radius: 8px;
-  padding: 2.5rem;
+  background: var(--bg-surface);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 12px;
+  padding: 3rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
   text-align: center;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-  color: #888;
+  color: var(--text-secondary);
   text-align: center;
-  font-size: 0.9rem;
-  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  margin-bottom: 2.5rem;
 }
 
 .formGroup {
@@ -38,66 +44,74 @@
 .label {
   display: block;
   font-size: 0.875rem;
+  font-weight: 500;
   margin-bottom: 0.5rem;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(128, 128, 128, 0.05);
-  border: 1px solid rgba(128, 128, 128, 0.2);
-  border-radius: 4px;
-  color: var(--foreground);
+  padding: 0.875rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: var(--transition-smooth);
 }
 
 .input:focus {
   outline: none;
-  border-color: #39d353;
+  border-color: var(--accent-primary);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.1);
 }
 
 .button {
   width: 100%;
-  padding: 0.75rem;
-  background: #2ea043;
+  padding: 0.875rem;
+  background: var(--accent-primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: var(--transition-smooth);
   margin-bottom: 1rem;
 }
 
 .button:hover:not(:disabled) {
-  background: #2c974b;
+  background: var(--accent-primary-hover);
+  transform: translateY(-1px);
 }
 
 .button:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .buttonSecondary {
   background: transparent;
-  color: #888;
-  border: 1px solid rgba(128, 128, 128, 0.2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .buttonSecondary:hover:not(:disabled) {
-  background: rgba(128, 128, 128, 0.1);
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-highlight);
 }
 
 .error {
-  color: #f85149;
+  color: var(--accent-danger);
   font-size: 0.875rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   text-align: center;
-  background: rgba(215, 58, 73, 0.1);
-  padding: 0.5rem;
-  border-radius: 4px;
+  background: rgba(218, 54, 51, 0.1);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(218, 54, 51, 0.2);
 }

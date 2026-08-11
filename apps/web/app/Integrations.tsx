@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import styles from "./page.module.css";
+import styles from "./Integrations.module.css";
 
 export default function Integrations({ session }: { session: any }) {
   const [extStatus, setExtStatus] = useState<any>(null);
@@ -145,90 +145,96 @@ export default function Integrations({ session }: { session: any }) {
   };
 
   return (
-    <div className={styles.section} style={{ marginTop: '32px' }}>
-      <h2>Integrations</h2>
-      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+    <div className={styles.section}>
+      <h2 className={styles.sectionTitle}>Integrations</h2>
+      <div className={styles.cardsGrid}>
         
         {/* Extension Connection */}
-        <div className={styles.card} style={{ flex: 1, minWidth: '300px' }}>
-          <h3>Chrome Extension</h3>
-          <p style={{ fontSize: '14px', color: '#888', marginBottom: '16px' }}>
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Chrome Extension</h3>
+          <p className={styles.cardDesc}>
             Securely connect your LeetHub-AI extension to this account.
           </p>
-          {extStatus?.connected ? (
-             <div style={{ textAlign: 'center' }}>
-               <div style={{ color: '#3fb950', fontWeight: 'bold', marginBottom: '16px' }}>✓ Extension Connected</div>
-               <button 
-                onClick={disconnectExtension} 
-                disabled={loading}
-                style={{ padding: '8px 16px', cursor: 'pointer', background: '#da3633', color: '#fff', border: 'none', borderRadius: '6px' }}
-              >
-                Disconnect
-              </button>
-             </div>
-          ) : pairingCode ? (
-            <div style={{ textAlign: 'center', padding: '16px', background: '#161b22', borderRadius: '8px' }}>
-              <div style={{ fontSize: '32px', letterSpacing: '4px', fontWeight: 'bold' }}>{pairingCode}</div>
+          <div className={styles.contentWrapper}>
+            {extStatus?.connected ? (
+               <div>
+                 <div className={styles.statusSuccess}>✓ Extension Connected</div>
+                 <button 
+                  onClick={disconnectExtension} 
+                  disabled={loading}
+                  className={styles.btnDanger}
+                >
+                  Disconnect
+                </button>
+               </div>
+            ) : pairingCode ? (
+              <div>
+                <div className={styles.pairingCodeBox}>
+                  <div className={styles.pairingCode}>{pairingCode}</div>
+                </div>
+                <button 
+                  onClick={generateCode} 
+                  disabled={loading}
+                  className={styles.btnSecondary}
+                >
+                  Generate New Code
+                </button>
+              </div>
+            ) : (
               <button 
                 onClick={generateCode} 
                 disabled={loading}
-                style={{ marginTop: '16px', padding: '8px 16px', cursor: 'pointer', background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '6px' }}
+                className={styles.btnPrimary}
               >
-                Generate New Code
+                Generate Pairing Code
               </button>
-            </div>
-          ) : (
-            <button 
-              onClick={generateCode} 
-              disabled={loading}
-              style={{ padding: '8px 16px', cursor: 'pointer', background: '#238636', color: '#fff', border: 'none', borderRadius: '6px' }}
-            >
-              Generate Pairing Code
-            </button>
-          )}
+            )}
+          </div>
         </div>
 
         {/* GitHub Connection */}
-        <div className={styles.card} style={{ flex: 1, minWidth: '300px' }}>
-          <h3>GitHub Repository</h3>
-          <p style={{ fontSize: '14px', color: '#888', marginBottom: '16px' }}>
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>GitHub Repository</h3>
+          <p className={styles.cardDesc}>
             Configure your personal repository for automated syncing via GitHub App.
           </p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className={styles.contentWrapper}>
             {!ghConfig?.installation_id ? (
                <button 
                 onClick={connectGithub}
                 disabled={loading}
-                style={{ padding: '8px 16px', cursor: 'pointer', background: '#238636', color: '#fff', border: 'none', borderRadius: '6px' }}
+                className={styles.btnPrimary}
               >
                 Connect GitHub
               </button>
             ) : (
               <>
-                <div style={{ color: '#3fb950', fontWeight: 'bold' }}>✓ GitHub App Installed ({ghConfig.github_account_login})</div>
+                <div className={styles.statusSuccess}>
+                  ✓ GitHub App Installed ({ghConfig.github_account_login})
+                </div>
                 <select 
                   value={selectedRepoId} 
                   onChange={e => setSelectedRepoId(e.target.value)}
-                  style={{ padding: '8px', background: '#161b22', border: '1px solid #30363d', color: '#fff', borderRadius: '4px', marginTop: '8px' }}
+                  className={styles.selectInput}
                 >
                   <option value="" disabled>Select a repository to sync to</option>
                   {ghRepos.map(r => (
                     <option key={r.id} value={r.id}>{r.full_name}</option>
                   ))}
                 </select>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <div className={styles.buttonGroup} style={{ marginTop: '1rem' }}>
                   <button 
                     onClick={saveGithub}
                     disabled={loading || !selectedRepoId}
-                    style={{ flex: 1, padding: '8px 16px', cursor: 'pointer', background: '#238636', color: '#fff', border: 'none', borderRadius: '6px' }}
+                    className={styles.btnPrimary}
                   >
                     Save Repository
                   </button>
                   <button 
                     onClick={disconnectGithub}
                     disabled={loading}
-                    style={{ padding: '8px 16px', cursor: 'pointer', background: '#da3633', color: '#fff', border: 'none', borderRadius: '6px' }}
+                    className={styles.btnDanger}
                   >
                     Disconnect
                   </button>
@@ -239,7 +245,7 @@ export default function Integrations({ session }: { session: any }) {
         </div>
 
       </div>
-      {msg && <div style={{ marginTop: '16px', color: '#58a6ff', fontSize: '14px' }}>{msg}</div>}
+      {msg && <div className={styles.globalMessage}>{msg}</div>}
     </div>
   );
 }

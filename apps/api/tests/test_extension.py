@@ -22,7 +22,7 @@ def test_generate_pairing_code():
     from app.api.deps import get_current_user_id
     app.dependency_overrides[get_current_user_id] = lambda: "user123"
     try:
-        response = client.post("/api/v1/extension/pairing-code")
+        response = client.post("/api/v1/extension/pairing-code", headers={"X-Forwarded-For": "5.6.7.8"})
         assert response.status_code == 200
     finally:
         app.dependency_overrides.pop(get_current_user_id, None)

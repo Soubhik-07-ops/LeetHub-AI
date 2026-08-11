@@ -1,13 +1,25 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Premium Dark Theme */
+  --bg-base: #090a0f;
+  --bg-surface: rgba(22, 27, 34, 0.6);
+  --bg-surface-hover: rgba(30, 37, 46, 0.8);
+  
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --border-color: rgba(240, 246, 252, 0.1);
+  --border-highlight: rgba(240, 246, 252, 0.2);
+
+  --accent-primary: #3fb950;
+  --accent-primary-hover: #2ea043;
+  --accent-secondary: #58a6ff;
+  --accent-danger: #da3633;
+
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+
+  --transition-smooth: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 html {
@@ -21,12 +33,15 @@ body {
 }
 
 body {
-  min-height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(88, 166, 255, 0.03), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(63, 185, 80, 0.03), transparent 25%);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -46,4 +61,19 @@ a {
   html {
     color-scheme: dark;
   }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
