@@ -48,18 +48,19 @@ export default function Home() {
   if (!session.user?.email_confirmed_at) {
     return (
       <div className={styles.page}>
-        <main className={styles.main} style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center', padding: '40px', background: '#161b22', borderRadius: '8px', border: '1px solid #30363d' }}>
-            <h1 style={{ color: '#fff', marginBottom: '16px' }}>Email Verification Required</h1>
-            <p style={{ color: '#8b949e', marginBottom: '24px' }}>
-              Please verify your email address ({session.user?.email}) to access the dashboard.
+        <main className={styles.main} style={{ display: 'flex', alignItems: 'center' }}>
+          <div className={styles.centeredCard}>
+            <h1 className={styles.centeredTitle}>Email Verification Required</h1>
+            <p className={styles.centeredText}>
+              Please verify your email address (<span className={styles.verifyEmailHighlight}>{session.user?.email}</span>) to access the dashboard.
             </p>
-            <p style={{ color: '#8b949e', marginBottom: '24px', fontSize: '14px' }}>
+            <p className={styles.centeredText} style={{ fontSize: '0.875rem' }}>
               Check your inbox for a verification link.
             </p>
             <button 
               onClick={handleLogout}
-              style={{ padding: '8px 16px', background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}
+              className={styles.signOutBtn}
+              style={{ marginTop: '1rem' }}
             >
               Sign Out
             </button>
@@ -70,20 +71,20 @@ export default function Home() {
   }
 
   return (
-    <div className={styles.page} style={{ padding: '40px', fontFamily: 'sans-serif' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #30363d', paddingBottom: '20px' }}>
-        <h1 style={{ margin: 0, color: '#fff' }}>LeetHub-AI Dashboard</h1>
-        <div>
-          <span style={{ color: '#8b949e', marginRight: '16px' }}>{session.user.email}</span>
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>LeetHub-AI Dashboard</h1>
+        <div className={styles.userInfo}>
+          <span className={styles.email}>{session.user.email}</span>
           <button 
             onClick={handleLogout}
-            style={{ padding: '6px 12px', background: '#21262d', color: '#c9d1d9', border: '1px solid #30363d', borderRadius: '6px', cursor: 'pointer' }}
+            className={styles.signOutBtn}
           >
             Sign Out
           </button>
         </div>
       </header>
-      <main style={{ marginTop: '40px' }}>
+      <main className={styles.main}>
         <Integrations session={session} />
       </main>
     </div>
