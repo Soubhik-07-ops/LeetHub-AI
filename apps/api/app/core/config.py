@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Environment Configuration
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "http://localhost:3000" # Fallback if not configured in .env
     REDIS_URL: Optional[str] = None
     
     # Supabase Integration

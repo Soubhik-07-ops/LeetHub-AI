@@ -41,16 +41,12 @@ class GitHubSyncRetryWorker:
     async def _process_pending_retries(self):
         supabase = get_supabase_client()
         
-        # Query for failed syncs needing retry
-        now_iso = datetime.now(timezone.utc).isoformat()
-        
-        # We need to manually build this query using Supabase Python client
-        res = supabase.table("submissions") \
-            .select("*") \
-            .eq("github_sync_status", "failed") \
-            .lt("github_sync_attempts", 3) \
-            .lte("github_next_retry_at", now_iso) \
-            .execute()
+        # Query for failed syncs needing retry using atomic RPC
+        try:
+            res = supabase.rpc("claim_retry_submissions", {"max_rows": 5}).execute()
+        except Exception as e:
+            logger.error(f"Error calling claim_retry_submissions RPC: {e}")
+            return
             
         if not res.data:
             return
@@ -75,7 +71,7 @@ class GitHubSyncRetryWorker:
         try:
             status_enum = SubmissionStatus(sub.get("status"))
         except ValueError:
-            status_enum = SubmissionStatus.UNKNOWN
+            status_enum = SubmissionStatus("accepted") # default to accepted for retry logic if parsing fails
             
         request = LeetCodeSubmissionRequest(
             problemSlug=sub.get("problem_slug"),

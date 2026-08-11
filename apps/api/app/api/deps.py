@@ -28,9 +28,11 @@ async def get_current_user_id(credentials: Optional[HTTPAuthorizationCredentials
             raise HTTPException(status_code=403, detail="Email verification required")
             
         return user_res.user.id
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error verifying token: {str(e)}")
-        raise HTTPException(status_code=401, detail="Invalid authentication token")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
 async def get_extension_user_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[str]:
     """
