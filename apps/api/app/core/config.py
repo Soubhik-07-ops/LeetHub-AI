@@ -5,11 +5,17 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "LeetHub-AI API"
     API_V1_STR: str = "/api/v1"
     
-    # GitHub Integration
-    GITHUB_TOKEN: Optional[str] = None
-    GITHUB_OWNER: Optional[str] = None
-    GITHUB_REPOSITORY: Optional[str] = None
-    GITHUB_BRANCH: str = "main"
+    # Supabase Integration
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
+    ALLOW_ANONYMOUS_SUBMISSIONS: bool = False
+    
+    # GitHub App Integration
+    GITHUB_APP_ID: Optional[str] = None
+    GITHUB_APP_CLIENT_ID: Optional[str] = None
+    GITHUB_APP_CLIENT_SECRET: Optional[str] = None
+    GITHUB_APP_PRIVATE_KEY: Optional[str] = None
+    GITHUB_APP_SLUG: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

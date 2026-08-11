@@ -1,76 +1,92 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import RedirectResponse
 import httpx
-from app.services.github_service import GitHubService
-from app.integrations.github.client import GitHubClient
-from app.integrations.github.schemas import GitHubFileRequest, GitHubFileResult
-from app.integrations.github.exceptions import GitHubIntegrationError
+from app.integrations.github.auth import GitHubAppAuth
 from app.core.config import settings
+from app.api.deps import get_current_user_id
+from app.schemas.github import GitHubConnectionCreate, GitHubConnectionResponse
+from app.services.github_connection_service import github_connection_service
+from datetime import datetime
 
 router = APIRouter()
 
-@router.post("/test", response_model=GitHubFileResult)
-async def test_github_integration():
-    """
-    Development endpoint to verify GitHub integration.
-    Creates or updates a deterministic test file in the configured repository.
+@router.get("/install")
+def install_github_app(user_id: str = Depends(get_current_user_id)):
+    if not settings.GITHUB_APP_SLUG:
+        raise HTTPException(status_code=500, detail="GITHUB_APP_SLUG not configured")
     
-    TODO: This endpoint must be protected with authentication or removed before production deployment.
-    """
-    if not settings.GITHUB_OWNER or not settings.GITHUB_REPOSITORY or not settings.GITHUB_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="GitHub configuration (owner, repository, or token) is missing."
-        )
+    # In production, state should be a signed JWT to prevent CSRF. 
+    # For local development/demo, we pass user_id directly.
+    url = f"https://github.com/apps/{settings.GITHUB_APP_SLUG}/installations/new?state={user_id}"
+    return {"url": url}
 
-    # Configure explicit timeouts for GitHub API communication
-    timeout = httpx.Timeout(10.0, connect=5.0)
+@router.get("/callback")
+async def github_callback(installation_id: str, setup_action: str, state: str):
+    user_id = state
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Missing state")
 
-    async with httpx.AsyncClient(timeout=timeout) as async_client:
-        github_client = GitHubClient(token=settings.GITHUB_TOKEN, async_client=async_client)
-        service = GitHubService(client=github_client)
+    async with httpx.AsyncClient() as client:
+        details = await GitHubAppAuth.get_installation_details(installation_id, client)
+        github_username = details.get("account", {}).get("login", "")
+
+    # Save partial connection (no repository selected yet)
+    github_connection_service.save_connection(
+        user_id=user_id,
+        installation_id=installation_id,
+        github_username=github_username,
+        repository_id="",
+        repository_full_name="",
+        default_branch="main"
+    )
+    
+    # Redirect back to frontend dashboard
+    return RedirectResponse(url="http://localhost:3000/")
+
+@router.get("/repositories")
+async def get_repositories(user_id: str = Depends(get_current_user_id)):
+    conn = github_connection_service.get_connection(user_id)
+    if not conn or not conn.installation_id:
+        raise HTTPException(status_code=404, detail="No GitHub installation found")
         
-        try:
-            # 1. Verify repository
-            await service.verify_repository(
-                owner=settings.GITHUB_OWNER, 
-                repo=settings.GITHUB_REPOSITORY
-            )
-        except GitHubIntegrationError as e:
-            # We log internally (service does some of this, but we raise safe external messages)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-                detail="GitHub repository verification failed. Please check configuration."
-            )
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Unexpected internal error verifying repository."
-            )
+    async with httpx.AsyncClient() as client:
+        token = await GitHubAppAuth.get_installation_access_token(conn.installation_id, client)
+        repos = await GitHubAppAuth.get_installation_repositories(token, client)
+        
+    return [{"id": str(r["id"]), "full_name": r["full_name"], "default_branch": r["default_branch"]} for r in repos]
 
-        # 2. Create/Update deterministic file
-        path = ".leethub/test/integration-status.md"
-        content = (
-            "# LeetHub-AI GitHub Integration\n\n"
-            "GitHub integration test successful.\n\n"
-            "This file was created automatically by the LeetHub-AI backend.\n"
-        )
-        commit_message = "chore: verify LeetHub-AI GitHub integration"
+@router.get("/connection", response_model=GitHubConnectionResponse)
+def get_connection(user_id: str = Depends(get_current_user_id)):
+    conn = github_connection_service.get_connection(user_id)
+    if not conn:
+        raise HTTPException(status_code=404, detail="GitHub connection not found")
+    return conn
 
-        request = GitHubFileRequest(
-            owner=settings.GITHUB_OWNER,
-            repository=settings.GITHUB_REPOSITORY,
-            path=path,
-            content=content,
-            commit_message=commit_message,
-            branch=settings.GITHUB_BRANCH
-        )
+@router.post("/connection", response_model=GitHubConnectionResponse)
+async def create_connection(data: GitHubConnectionCreate, user_id: str = Depends(get_current_user_id)):
+    conn = github_connection_service.get_connection(user_id)
+    if not conn or not conn.installation_id:
+        raise HTTPException(status_code=404, detail="GitHub installation not found. Connect GitHub first.")
+        
+    # Verify the repository belongs to the installation
+    async with httpx.AsyncClient() as client:
+        token = await GitHubAppAuth.get_installation_access_token(conn.installation_id, client)
+        repos = await GitHubAppAuth.get_installation_repositories(token, client)
+        
+    repo_match = next((r for r in repos if str(r["id"]) == data.repository_id), None)
+    if not repo_match:
+        raise HTTPException(status_code=403, detail="Repository not accessible to this installation.")
+        
+    return github_connection_service.save_connection(
+        user_id=user_id,
+        installation_id=conn.installation_id,
+        github_username=conn.github_account_login,
+        repository_id=data.repository_id,
+        repository_full_name=repo_match["full_name"],
+        default_branch=data.default_branch
+    )
 
-        result = await service.create_or_update_file(request)
-
-        if not result.success:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="GitHub rejected the file operation or a network error occurred."
-            )
-
-        return result
+@router.delete("/connection")
+def delete_connection(user_id: str = Depends(get_current_user_id)):
+    github_connection_service.delete_connection(user_id)
+    return {"status": "deleted"}
