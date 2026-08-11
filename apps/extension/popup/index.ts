@@ -6,7 +6,11 @@ const connectedSection = document.getElementById('connected-section') as HTMLDiv
 const statusText = document.getElementById('status') as HTMLDivElement;
 const errorMsg = document.getElementById('error-msg') as HTMLDivElement;
 
-const API_BASE = "http://localhost:8000/api/v1";
+// Allow injection of API_BASE during build/packaging, default to localhost for development
+declare var process: any;
+const API_BASE = (typeof process !== "undefined" && process.env && process.env.API_BASE) 
+    ? process.env.API_BASE 
+    : "http://localhost:8000/api/v1";
 
 async function updateUI() {
   chrome.storage.local.get(['leethub_credential'], (result) => {

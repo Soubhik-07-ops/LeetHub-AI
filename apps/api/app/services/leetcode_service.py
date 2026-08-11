@@ -65,6 +65,11 @@ class LeetCodeService:
             if status == "synced":
                 from datetime import datetime, timezone
                 update_data["github_synced_at"] = datetime.now(timezone.utc).isoformat()
+                update_data["github_last_sync_error"] = None
+            elif status == "failed":
+                from datetime import datetime, timezone, timedelta
+                update_data["github_sync_attempts"] = 1
+                update_data["github_next_retry_at"] = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
             if path:
                 update_data["github_path"] = path
             if commit_sha:

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Response
+from fastapi import APIRouter, status, HTTPException, Response, Request
 from datetime import datetime, timezone
 import logging
 from app.integrations.leetcode.schemas import (
@@ -15,18 +15,21 @@ import httpx
 from fastapi import Depends
 from typing import Optional
 from app.api.deps import get_extension_user_id
+from app.core.rate_limit import limiter
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.post("/submissions", response_model=LeetCodeSubmissionResponse)
+@limiter.limit("30/minute")
 async def ingest_submission(
-    request: LeetCodeSubmissionRequest, 
+    request: Request,
+    body: LeetCodeSubmissionRequest, 
     response: Response,
     user_id: Optional[str] = Depends(get_extension_user_id)
 ) -> LeetCodeSubmissionResponse:
     try:
-        success, operation, github_sync_status = leetcode_service.save_submission(request, user_id=user_id)
+        success, operation, github_sync_status = leetcode_service.save_submission(body, user_id=user_id)
         
         # Determine if we need to sync to GitHub
         should_sync = False
@@ -45,13 +48,13 @@ async def ingest_submission(
             async with httpx.AsyncClient(timeout=timeout) as async_client:
                 sync_service = LeetCodeGitHubSyncService(async_client=async_client)
                 
-                sync_success, gh_path, gh_sha = await sync_service.sync_submission(request, user_id)
+                sync_success, gh_path, gh_sha = await sync_service.sync_submission(body, user_id)
                 
                 final_sync_status = GitHubSyncStatus.synced if sync_success else GitHubSyncStatus.failed
                 
                 # Update DB state
                 leetcode_service.update_github_sync_status(
-                    submission_id=request.submissionId,
+                    submission_id=body.submissionId,
                     status=final_sync_status.value,
                     path=gh_path,
                     commit_sha=gh_sha
@@ -65,9 +68,9 @@ async def ingest_submission(
         # Log only safe metadata
         logger.info(
             "Processed LeetCode submission: submissionId=%s, problemSlug=%s, status=%s, operation=%s, githubSync=%s",
-            request.submissionId,
-            request.problemSlug,
-            request.status.value,
+            body.submissionId,
+            body.problemSlug,
+            body.status.value,
             operation,
             final_sync_status.value
         )
@@ -75,9 +78,9 @@ async def ingest_submission(
         return LeetCodeSubmissionResponse(
             success=success,
             operation=operation,
-            submissionId=request.submissionId,
-            problemSlug=request.problemSlug,
-            status=request.status,
+            submissionId=body.submissionId,
+            problemSlug=body.problemSlug,
+            status=body.status,
             receivedAt=datetime.now(timezone.utc),
             githubSync=final_sync_status
         )

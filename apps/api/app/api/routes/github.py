@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.responses import RedirectResponse
 import httpx
+from app.core.rate_limit import limiter
 from app.integrations.github.auth import GitHubAppAuth
 from app.core.config import settings
 from app.api.deps import get_current_user_id
@@ -11,7 +12,8 @@ from datetime import datetime
 router = APIRouter()
 
 @router.get("/install")
-def install_github_app(user_id: str = Depends(get_current_user_id)):
+@limiter.limit("10/minute")
+def install_github_app(request: Request, user_id: str = Depends(get_current_user_id)):
     if not settings.GITHUB_APP_SLUG:
         raise HTTPException(status_code=500, detail="GITHUB_APP_SLUG not configured")
     
@@ -21,7 +23,8 @@ def install_github_app(user_id: str = Depends(get_current_user_id)):
     return {"url": url}
 
 @router.get("/callback")
-async def github_callback(installation_id: str, setup_action: str, state: str):
+@limiter.limit("10/minute")
+async def github_callback(request: Request, installation_id: str, setup_action: str, state: str):
     user_id = state
     if not user_id:
         raise HTTPException(status_code=400, detail="Missing state")
@@ -41,7 +44,7 @@ async def github_callback(installation_id: str, setup_action: str, state: str):
     )
     
     # Redirect back to frontend dashboard
-    return RedirectResponse(url="http://localhost:3000/")
+    return RedirectResponse(url=f"{settings.FRONTEND_URL}/")
 
 @router.get("/repositories")
 async def get_repositories(user_id: str = Depends(get_current_user_id)):
@@ -63,7 +66,8 @@ def get_connection(user_id: str = Depends(get_current_user_id)):
     return conn
 
 @router.post("/connection", response_model=GitHubConnectionResponse)
-async def create_connection(data: GitHubConnectionCreate, user_id: str = Depends(get_current_user_id)):
+@limiter.limit("10/minute")
+async def create_connection(request: Request, data: GitHubConnectionCreate, user_id: str = Depends(get_current_user_id)):
     conn = github_connection_service.get_connection(user_id)
     if not conn or not conn.installation_id:
         raise HTTPException(status_code=404, detail="GitHub installation not found. Connect GitHub first.")

@@ -5,10 +5,15 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "LeetHub-AI API"
     API_V1_STR: str = "/api/v1"
     
+    # Environment Configuration
+    FRONTEND_URL: str = "http://localhost:3000"
+    REDIS_URL: Optional[str] = None
+    
     # Supabase Integration
     SUPABASE_URL: Optional[str] = None
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
     ALLOW_ANONYMOUS_SUBMISSIONS: bool = False
+    REQUIRE_EMAIL_VERIFICATION: bool = True
     
     # GitHub App Integration
     GITHUB_APP_ID: Optional[str] = None

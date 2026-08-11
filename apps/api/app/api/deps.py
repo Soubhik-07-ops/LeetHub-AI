@@ -23,6 +23,10 @@ async def get_current_user_id(credentials: Optional[HTTPAuthorizationCredentials
         user_res = supabase.auth.get_user(token)
         if not user_res or not user_res.user:
             raise HTTPException(status_code=401, detail="Invalid authentication token")
+            
+        if settings.REQUIRE_EMAIL_VERIFICATION and not user_res.user.email_confirmed_at:
+            raise HTTPException(status_code=403, detail="Email verification required")
+            
         return user_res.user.id
     except Exception as e:
         logger.error(f"Error verifying token: {str(e)}")
