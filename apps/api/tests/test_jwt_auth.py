@@ -40,8 +40,19 @@ def test_valid_jwt(mock_analytics_client, mock_auth_client):
     mock_query.select.return_value = mock_query
     mock_query.eq.return_value = mock_query
     mock_query.order.return_value = mock_query
+    mock_query.limit.return_value = mock_query
     mock_query.execute.return_value = MagicMock(data=[])
     mock_db.table.return_value = mock_query
+    
+    def rpc_side_effect(name, *args, **kwargs):
+        m = MagicMock()
+        if name == 'get_overview_stats':
+            m.execute.return_value = MagicMock(data=[{'total_submissions': 0, 'unique_problems': 0, 'accepted_submissions': 0, 'rejected_submissions': 0, 'github_synced_count': 0, 'github_failed_count': 0, 'github_skipped_count': 0}])
+        else:
+            m.execute.return_value = MagicMock(data=[])
+        return m
+    mock_db.rpc.side_effect = rpc_side_effect
+    
     mock_analytics_client.return_value = mock_db
 
     res = client.get("/api/v1/analytics/overview", headers={"Authorization": "Bearer validtoken"})

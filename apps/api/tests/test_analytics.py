@@ -8,17 +8,47 @@ client = TestClient(app)
 
 def create_mock_supabase_data(data):
     mock_client = MagicMock()
+    mock_query = MagicMock()
     mock_res = MagicMock()
     mock_res.data = data
-    # Setup chain: client.table().select().eq() OR .is_().order().execute()
-    # It can be arbitrarily deep. We will mock the execute() method at the end of the chain.
-    mock_query = MagicMock()
+    
     mock_query.select.return_value = mock_query
     mock_query.eq.return_value = mock_query
-    mock_query.is_.return_value = mock_query
     mock_query.order.return_value = mock_query
+    mock_query.limit.return_value = mock_query
     mock_query.execute.return_value = mock_res
+    
     mock_client.table.return_value = mock_query
+    
+    # Mock RPCs
+    def rpc_side_effect(name, *args, **kwargs):
+        m = MagicMock()
+        if name == 'get_overview_stats':
+            acc = len([d for d in data if d.get('status') == 'accepted'])
+            m.execute.return_value = MagicMock(data=[{
+                'total_submissions': len(data),
+                'unique_problems': len(set(d.get('problem_slug', '') for d in data)),
+                'accepted_submissions': acc,
+                'rejected_submissions': len(data) - acc,
+                'github_synced_count': len([d for d in data if d.get('github_sync_status') == 'synced']),
+                'github_failed_count': len([d for d in data if d.get('github_sync_status') == 'failed']),
+                'github_skipped_count': len([d for d in data if d.get('github_sync_status') not in ('synced', 'failed')])
+            }])
+        elif name == 'get_streak_stats':
+            m.execute.return_value = MagicMock(data=[{'current_streak': 0, 'longest_streak': 0}])
+        elif name == 'get_activity_heatmap':
+            from collections import Counter
+            dates = Counter([d.get('submitted_at', '')[:10] for d in data if d.get('submitted_at')])
+            hm = [{'activity_date': k, 'submissions': v} for k, v in dates.items()]
+            m.execute.return_value = MagicMock(data=hm)
+        elif name == 'get_trend_metrics':
+            m.execute.return_value = MagicMock(data=[])
+        else:
+            m.execute.return_value = MagicMock(data=[])
+        return m
+        
+    mock_client.rpc.side_effect = rpc_side_effect
+    
     return mock_client, mock_query
 
 @patch('app.services.analytics_service.get_supabase_client')
@@ -43,10 +73,10 @@ def test_analytics_mixed_dataset(mock_get_client):
     app.dependency_overrides[get_current_user_id] = lambda: "test-user"
     try:
         mock_data = [
-            {"id": "1", "problem_slug": "two-sum", "problem_title": "Two Sum", "status": "accepted", "submitted_at": "2026-08-01T12:00:00Z", "github_sync_status": "synced"},
-            {"id": "2", "problem_slug": "two-sum", "problem_title": "Two Sum", "status": "rejected", "submitted_at": "2026-08-01T14:00:00Z", "github_sync_status": "synced"},
-            {"id": "3", "problem_slug": "add-two-numbers", "problem_title": "Add", "status": "accepted", "submitted_at": "2026-08-02T12:00:00Z", "github_sync_status": "failed"},
-            {"id": "4", "problem_slug": "add-two-numbers", "problem_title": "Add", "status": "accepted", "submitted_at": "2026-08-03T12:00:00Z", "github_sync_status": "pending"}
+            {"id": "1", "leetcode_submission_id": "1001", "problem_slug": "two-sum", "problem_title": "Two Sum", "status": "accepted", "submitted_at": "2026-08-01T12:00:00Z", "github_sync_status": "synced"},
+            {"id": "2", "leetcode_submission_id": "1002", "problem_slug": "two-sum", "problem_title": "Two Sum", "status": "rejected", "submitted_at": "2026-08-01T14:00:00Z", "github_sync_status": "synced"},
+            {"id": "3", "leetcode_submission_id": "1003", "problem_slug": "add-two-numbers", "problem_title": "Add", "status": "accepted", "submitted_at": "2026-08-02T12:00:00Z", "github_sync_status": "failed"},
+            {"id": "4", "leetcode_submission_id": "1004", "problem_slug": "add-two-numbers", "problem_title": "Add", "status": "accepted", "submitted_at": "2026-08-03T12:00:00Z", "github_sync_status": "pending"}
         ]
         mock_client, _ = create_mock_supabase_data(mock_data)
         mock_get_client.return_value = mock_client
