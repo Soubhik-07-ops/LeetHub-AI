@@ -20,6 +20,9 @@ const mockChromeStorageGet = vi.fn();
   storage: {
     local: {
       get: mockChromeStorageGet
+    },
+    sync: {
+      get: mockChromeStorageGet
     }
   }
 };

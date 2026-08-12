@@ -68,13 +68,17 @@ describe('LeetCode Result Resolver', () => {
       expect(mapLeetCodeStatus('SUCCESS', 'Compile Error')).toBe('rejected');
     });
 
-    it('returns unknown for unrecognized status', () => {
-      expect(mapLeetCodeStatus('SUCCESS', 'FooBar')).toBe('unknown');
-    });
-
-    it('returns pending for pending/judging states', () => {
+    it('returns pending for transient states', () => {
       expect(mapLeetCodeStatus('PENDING', '')).toBe('pending');
       expect(mapLeetCodeStatus('STARTED', '')).toBe('pending');
+      expect(mapLeetCodeStatus('QUEUED', '')).toBe('pending');
+      expect(mapLeetCodeStatus('JUDGING', '')).toBe('pending');
+      expect(mapLeetCodeStatus('EVALUATING', '')).toBe('pending');
+    });
+
+    it('returns unknown for unrecognized terminal states', () => {
+      expect(mapLeetCodeStatus('SUCCESS', 'FooBar')).toBe('unknown');
+      expect(mapLeetCodeStatus('UNKNOWN_STATE', 'FooBar')).toBe('unknown');
     });
   });
 

@@ -6,10 +6,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+  <div class="header">
     <h2>LeetHub-AI</h2>
-    <div id="status" class="status-disconnected">Not Connected</div>
-    
+    <div id="status-indicator" class="status-indicator status-disconnected">
+      <div class="status-dot"></div>
+      <span class="status-text" id="status-text">Not Connected</span>
+    </div>
+  </div>
+
+  <div class="container">
     <div id="connect-section">
       <p>Enter the pairing code from your web dashboard.</p>
       <input type="text" id="pairing-code" placeholder="123456" maxlength="6" />
@@ -18,7 +23,18 @@
     </div>
     
     <div id="connected-section" style="display: none;">
-      <p>Your extension is securely connected!</p>
+      <p style="margin-bottom: 12px;">Your extension is securely connected!</p>
+      
+      <div id="recent-submission" class="submission-card" style="display: none;">
+        <h3>Recent Submission</h3>
+        <div class="submission-details">
+          <div id="sub-title"></div>
+          <div><span id="sub-status" class="badge"></span></div>
+          <div id="sub-date" style="font-size: 10px; margin-top: 4px; color: #64748b;"></div>
+        </div>
+      </div>
+
+      <button id="dashboard-btn" style="margin-top: 12px; background: rgba(255, 255, 255, 0.1);">Open Dashboard</button>
       <button id="unlink-btn">Disconnect</button>
     </div>
   </div>

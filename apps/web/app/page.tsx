@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import Analytics from "./Analytics";
 import Integrations from "./Integrations";
 import styles from "./page.module.css";
 
@@ -85,6 +86,7 @@ export default function Home() {
         </div>
       </header>
       <main className={styles.main}>
+        <Analytics session={session} />
         <Integrations session={session} />
       </main>
     </div>

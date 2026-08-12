@@ -166,6 +166,9 @@ def test_github_path_deterministic():
         submittedAt = MagicMock()
         submittedAt.isoformat.return_value = "2026"
         sourceCode = "code"
+        topics = ["Hash Table", "Math"]
+        difficulty = "Easy"
+        language = "python"
 
     async def run():
         with patch('app.services.leetcode_github_service.GitHubFileRequest') as mock_req:
@@ -179,7 +182,7 @@ def test_github_path_deterministic():
                             
                             res = await service.sync_submission(FakeRequest(), "test-user")
                             assert res[0] is True
-                            assert res[1] == "leetcode/twosum/123.md"
+                            assert res[1] == "leetcode/Hash_Table/twosum/123.md"
                 
     asyncio.run(run())
 

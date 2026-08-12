@@ -19,5 +19,9 @@
       "matches": ["https://leetcode.com/problems/*"],
       "js": ["content/index.js"]
     }
-  ]
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "LeetHub-AI"
+  }
 }

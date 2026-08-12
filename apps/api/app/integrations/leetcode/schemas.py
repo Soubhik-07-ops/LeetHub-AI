@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator, Field
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
 
 class SubmissionStatus(str, Enum):
     accepted = "accepted"
@@ -25,6 +26,10 @@ class LeetCodeSubmissionRequest(BaseModel):
     sourceCode: str = Field(..., max_length=102400)
     submittedAt: datetime
     submissionId: str
+    topics: Optional[List[str]] = None
+    difficulty: Optional[str] = None
+    language: Optional[str] = None
+    contestSlug: Optional[str] = None
 
     @field_validator("problemSlug")
     @classmethod

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc && esbuild src/content/index.ts --bundle --outfile=dist/content/index.js --format=iife --define:process.env.API_BASE=\"\\\"${API_BASE:-http://localhost:8000/api/v1}\\\"\" && node -e \"require('fs').copyFileSync('manifest.json', 'dist/manifest.json')\"",
+    "build": "node build.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

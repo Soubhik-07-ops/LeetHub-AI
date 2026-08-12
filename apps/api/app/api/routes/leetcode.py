@@ -33,9 +33,9 @@ async def ingest_submission(
         
         # Determine if we need to sync to GitHub
         should_sync = False
-        if operation == "created":
+        if operation == "created" and body.status.value == "accepted":
             should_sync = True
-        elif operation == "duplicate" and github_sync_status == "failed":
+        elif operation == "duplicate" and github_sync_status == "failed" and body.status.value == "accepted":
             should_sync = True
             
         final_sync_status = GitHubSyncStatus.skipped

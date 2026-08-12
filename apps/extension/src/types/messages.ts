@@ -9,6 +9,9 @@ export interface CapturedSubmission {
   sourceCode?: string;
   submittedAt: string;
   source: "leetcode";
+  difficulty?: string;
+  topics?: string[];
+  contestSlug?: string;
 }
 
 export const CONTENT_SUBMISSION_DETECTED = "CONTENT_SUBMISSION_DETECTED";

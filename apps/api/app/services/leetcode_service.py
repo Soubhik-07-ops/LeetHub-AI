@@ -36,7 +36,11 @@ class LeetCodeService:
                 "source_code": request.sourceCode,
                 "submitted_at": request.submittedAt.isoformat(),
                 "github_sync_status": "pending",
-                "user_id": user_id
+                "user_id": user_id,
+                "topics": request.topics,
+                "difficulty": request.difficulty,
+                "language": request.language,
+                "contest_slug": request.contestSlug
             }
             
             client.table('submissions').insert(data).execute()

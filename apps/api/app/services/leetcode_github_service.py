@@ -20,6 +20,11 @@ class LeetCodeGitHubSyncService:
         # Keep only alphanumerics and hyphens
         return re.sub(r'[^a-zA-Z0-9\-]', '', slug.lower())
 
+    def _sanitize_topic(self, topic: str) -> str:
+        # Replace spaces with underscores, preserve case, remove illegals
+        topic = topic.replace(' ', '_')
+        return re.sub(r'[^a-zA-Z0-9\-_]', '', topic)
+
     def _generate_markdown_fence(self, source_code: str) -> str:
         """Finds the longest sequence of backticks in the source code to generate a safe fence."""
         matches = re.findall(r'`+', source_code)
@@ -57,11 +62,19 @@ class LeetCodeGitHubSyncService:
             github_client = GitHubClient(token=token, async_client=self.async_client)
             github_service = GitHubService(client=github_client)
 
-            path = f"leetcode/{slug}/{request.submissionId}.md"
+            primary_topic = "Uncategorized"
+            if request.topics and len(request.topics) > 0:
+                primary_topic = request.topics[0]
+                
+            topic_folder = self._sanitize_topic(primary_topic)
+            path = f"leetcode/{topic_folder}/{slug}/{request.submissionId}.md"
             
             fence = self._generate_markdown_fence(request.sourceCode)
             content = (
                 f"# {request.problemTitle}\n\n"
+                f"- **Difficulty:** {request.difficulty or 'Unknown'}\n"
+                f"- **Language:** {request.language or 'Unknown'}\n"
+                f"- **Topics:** {', '.join(request.topics) if request.topics else 'None'}\n"
                 f"- **Submission ID:** {request.submissionId}\n"
                 f"- **Status:** {request.status.value}\n"
                 f"- **Date:** {request.submittedAt.isoformat()}\n\n"

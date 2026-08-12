@@ -93,6 +93,46 @@ class AnalyticsService:
             ActivityDay(date=k, submissions=v) for k, v in sorted(activity_dict.items())
         ]
         
+        # Streak Calculation
+        current_streak = 0
+        longest_streak = 0
+        
+        if activity_by_day:
+            import datetime as dt
+            # Parse dates and sort them
+            dates = sorted([dt.datetime.strptime(day.date, '%Y-%m-%d').date() for day in activity_by_day])
+            
+            if dates:
+                # Longest streak calculation
+                temp_longest = 1
+                for i in range(1, len(dates)):
+                    if (dates[i] - dates[i-1]).days == 1:
+                        temp_longest += 1
+                    else:
+                        longest_streak = max(longest_streak, temp_longest)
+                        temp_longest = 1
+                longest_streak = max(longest_streak, temp_longest)
+                
+                # Current streak calculation
+                today = datetime.now(timezone.utc).date()
+                if dates[-1] == today:
+                    current_streak = 1
+                    for i in range(len(dates)-2, -1, -1):
+                        if (dates[i+1] - dates[i]).days == 1:
+                            current_streak += 1
+                        else:
+                            break
+                elif (today - dates[-1]).days == 1:
+                    # They haven't submitted today, but submitted yesterday
+                    current_streak = 1
+                    for i in range(len(dates)-2, -1, -1):
+                        if (dates[i+1] - dates[i]).days == 1:
+                            current_streak += 1
+                        else:
+                            break
+                else:
+                    current_streak = 0
+
         return AnalyticsOverviewResponse(
             total_submissions=total_submissions,
             unique_problems=len(unique_problems_set),
@@ -102,6 +142,8 @@ class AnalyticsService:
             github_synced_count=github_synced_count,
             github_failed_count=github_failed_count,
             github_skipped_count=github_skipped_count,
+            current_streak=current_streak,
+            longest_streak=longest_streak,
             activity_by_day=activity_by_day,
             recent_submissions=recent_submissions
         )

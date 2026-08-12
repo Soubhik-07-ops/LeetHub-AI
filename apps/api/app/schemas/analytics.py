@@ -24,5 +24,7 @@ class AnalyticsOverviewResponse(BaseModel):
     github_synced_count: int
     github_failed_count: int
     github_skipped_count: int
+    current_streak: int
+    longest_streak: int
     activity_by_day: List[ActivityDay]
     recent_submissions: List[RecentSubmission]

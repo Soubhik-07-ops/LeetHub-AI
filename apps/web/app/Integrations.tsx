@@ -12,38 +12,65 @@ export default function Integrations({ session }: { session: any }) {
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  const fetchState = () => {
-    fetch("/api/v1/extension/status", {
-      headers: { "Authorization": `Bearer ${session.access_token}` }
-    })
-    .then(r => r.ok ? r.json() : null)
-    .then(d => {
-      if (d) setExtStatus(d);
-    });
-
-    fetch("/api/v1/integrations/github/connection", {
-      headers: { "Authorization": `Bearer ${session.access_token}` }
-    })
-    .then(r => r.ok ? r.json() : null)
-    .then(d => {
-      if (d && !d.detail) {
-        setGhConfig(d);
-        setSelectedRepoId(d.repository_id || "");
-        if (d.installation_id) {
-          fetch("/api/v1/integrations/github/repositories", {
-            headers: { "Authorization": `Bearer ${session.access_token}` }
-          })
-          .then(r2 => r2.ok ? r2.json() : [])
-          .then(repos => setGhRepos(repos));
+  const fetchState = async () => {
+    try {
+      const r = await fetch("/api/v1/extension/status", {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        setExtStatus(d);
+        if (d.connected) {
+          setPairingCode("");
+          setMsg("");
+          setTimeLeft(0);
         }
       }
-    });
+    } catch (e) {}
+
+    try {
+      const r = await fetch("/api/v1/integrations/github/connection", {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d && !d.detail) {
+          setGhConfig(d);
+          setSelectedRepoId(d.repository_id || "");
+          if (d.installation_id) {
+            const r2 = await fetch("/api/v1/integrations/github/repositories", {
+              headers: { "Authorization": `Bearer ${session.access_token}` }
+            });
+            if (r2.ok) {
+              const repos = await r2.json();
+              setGhRepos(repos);
+            }
+          }
+        }
+      }
+    } catch (e) {}
   };
 
   useEffect(() => {
     fetchState();
   }, [session]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (pairingCode && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(t => t - 1);
+        // Also poll status while code is active
+        if (timeLeft % 5 === 0) fetchState();
+      }, 1000);
+    } else if (timeLeft === 0 && pairingCode) {
+      setPairingCode("");
+      setMsg("Pairing code expired. Please generate a new one.");
+    }
+    return () => clearInterval(interval);
+  }, [pairingCode, timeLeft]);
 
   const generateCode = async () => {
     setLoading(true);
@@ -56,7 +83,8 @@ export default function Integrations({ session }: { session: any }) {
       const d = await r.json();
       if (r.ok) {
         setPairingCode(d.code);
-        setMsg("Enter this code in the extension popup within 10 minutes.");
+        setTimeLeft(600); // 10 minutes
+        setMsg("");
       } else {
         setMsg("Error generating code: " + d.detail);
       }
@@ -171,6 +199,9 @@ export default function Integrations({ session }: { session: any }) {
               <div>
                 <div className={styles.pairingCodeBox}>
                   <div className={styles.pairingCode}>{pairingCode}</div>
+                  <div style={{ marginTop: '12px', color: '#94a3b8', fontSize: '0.875rem' }}>
+                    Expires in {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
+                  </div>
                 </div>
                 <button 
                   onClick={generateCode} 

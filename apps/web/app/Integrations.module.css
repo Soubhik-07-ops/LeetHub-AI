@@ -1,13 +1,20 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
   animation: fadeIn 0.5s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .sectionTitle {
@@ -15,6 +22,7 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .cardsGrid {

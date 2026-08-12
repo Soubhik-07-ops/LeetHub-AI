@@ -11,31 +11,35 @@ const MAX_POLLING_ATTEMPTS = 10;
 const POLLING_INTERVAL_MS = 500;
 
 export function mapLeetCodeStatus(state: string, statusMsg: string): SubmissionStatus | "pending" | "unknown" {
-  if (state === "PENDING" || state === "STARTED") {
+  const normalizedState = state.trim().toUpperCase();
+  const transientStates = ["PENDING", "STARTED", "QUEUED", "JUDGING", "EVALUATING", "RUNNING_TESTS"];
+  
+  if (transientStates.includes(normalizedState)) {
     return "pending";
   }
-  
-  if (state !== "SUCCESS") {
-    return "unknown";
-  }
 
+  // Treat SUCCESS or any other unknown state as potentially terminal, so parse statusMsg.
   const normalized = statusMsg.trim().toLowerCase();
   
   if (normalized === "accepted") {
     return "accepted";
   }
   
-  if (
-    normalized.includes("wrong answer") ||
-    normalized.includes("runtime error") ||
-    normalized.includes("time limit exceeded") ||
-    normalized.includes("memory limit exceeded") ||
-    normalized.includes("compile error") ||
-    normalized.includes("limit exceeded") ||
-    normalized.includes("error") ||
-    normalized.includes("rejected")
-  ) {
-    return "rejected";
+  const rejectedKeywords = [
+    "wrong answer",
+    "runtime error",
+    "time limit exceeded",
+    "memory limit exceeded",
+    "compile error",
+    "limit exceeded",
+    "error",
+    "rejected"
+  ];
+
+  for (const keyword of rejectedKeywords) {
+    if (normalized.includes(keyword)) {
+      return "rejected";
+    }
   }
 
   return "unknown";
@@ -90,8 +94,9 @@ export async function resolveSubmissionResult(submissionId: string): Promise<Sub
       
       const mappedStatus = mapLeetCodeStatus(state, statusMsg);
       
+      logger.info(`Resolver state: ${state}, status_msg: ${statusMsg}`);
+
       if (mappedStatus !== "pending") {
-        logger.info(`Resolver status_msg: ${statusMsg}`);
         return {
           status: mappedStatus === "unknown" ? "unknown" : mappedStatus,
           submissionId,

@@ -2,6 +2,7 @@ import { logger } from "../../lib/logger.js";
 import { resolveSubmissionResult } from "./result-resolver.js";
 import { storage } from "../../lib/storage.js";
 import { CapturedSubmission } from "../../types/messages.js";
+import { apiClient } from "../../lib/api-client.js";
 
 export interface PendingSubmission {
   sourceCode: string;
@@ -11,6 +12,7 @@ export interface PendingSubmission {
   timestamp: number;
   tabId: number;
   submissionId?: string;
+  contestSlug?: string;
 }
 
 // Map of tabId to PendingSubmission
@@ -39,24 +41,71 @@ export function updatePendingSubmissionMetadata(tabId: number, metadata: { probl
   }
 }
 
+async function fetchProblemMetadata(slug: string): Promise<{ difficulty?: string, topics?: string[], title?: string }> {
+  try {
+    const query = `
+      query questionData($titleSlug: String!) {
+        question(titleSlug: $titleSlug) {
+          title
+          difficulty
+          topicTags {
+            name
+          }
+        }
+      }
+    `;
+    const res = await fetch("https://leetcode.com/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        variables: { titleSlug: slug }
+      })
+    });
+    const json = await res.json();
+    if (json.data?.question) {
+      const difficulty = json.data.question.difficulty;
+      const topics = json.data.question.topicTags?.map((tag: any) => tag.name) || [];
+      const title = json.data.question.title;
+      return { difficulty, topics, title };
+    }
+  } catch (error) {
+    logger.warn(`Failed to fetch metadata for ${slug}`, error);
+  }
+  return {};
+}
+
 async function startResultResolution(pending: PendingSubmission, submissionId: string) {
   try {
     logger.info(`Starting result resolution for submission ${submissionId}`);
-    const result = await resolveSubmissionResult(submissionId);
     
-    if (result.status === "accepted" || result.status === "rejected") {
+    // Fetch extended metadata concurrently
+    const [result, metadata] = await Promise.all([
+      resolveSubmissionResult(submissionId),
+      fetchProblemMetadata(pending.problemSlug)
+    ]);
+    
+    if (result.status === "accepted" || result.status === "rejected" || result.status === "unknown") {
       const fullSubmission: CapturedSubmission = {
         problemSlug: pending.problemSlug,
-        problemTitle: pending.problemTitle,
+        problemTitle: pending.problemTitle || metadata.title || pending.problemSlug,
         status: result.status,
         source: "leetcode",
         submittedAt: result.resolvedAt,
         sourceCode: pending.sourceCode,
-        language: pending.language
+        language: pending.language,
+        difficulty: metadata.difficulty,
+        topics: metadata.topics,
+        contestSlug: pending.contestSlug,
+        submissionId: submissionId
       };
       
       logger.info("Captured final submission", { ...fullSubmission, sourceCode: fullSubmission.sourceCode ? `[${fullSubmission.sourceCode.length} chars]` : undefined });
       await storage.saveLatestSubmission(fullSubmission);
+      // Sync to backend (was previously missing)
+      await apiClient.syncSubmission(fullSubmission);
     }
   } finally {
     trackedSubmissionIds.delete(submissionId);
@@ -72,9 +121,28 @@ export function initializeNetworkCapture(): void {
         const url = details.url;
         const tabId = details.tabId;
 
-        // Diagnostic logging for ANY submit/check related URL
-        if (url.includes("/submit/") || url.includes("/check")) {
-          // Keep it minimal as per user request to avoid log noise
+        // Diagnostic logging for ANY submit/check/graphql related URL
+        if (url.includes("/submit") || url.includes("/check") || url.includes("/graphql")) {
+          // Parse operationName if GraphQL
+          let operationName = "unknown";
+          if (url.includes("/graphql") && details.method === "POST" && details.requestBody && details.requestBody.raw && details.requestBody.raw[0]) {
+            try {
+              const rawBytes = details.requestBody.raw[0].bytes;
+              if (rawBytes) {
+                const decoder = new TextDecoder('utf-8');
+                const jsonString = decoder.decode(rawBytes);
+                const jsonBody = JSON.parse(jsonString);
+                if (jsonBody.operationName) {
+                  operationName = jsonBody.operationName;
+                }
+              }
+            } catch (e) {}
+          }
+
+          // Only log relevant GraphQL mutations/queries or all submit/check
+          if (!url.includes("/graphql") || operationName === "submitCode" || operationName === "checkSubmission" || operationName.toLowerCase().includes("submit")) {
+            logger.info(`[DIAGNOSTIC] url: ${new URL(url).pathname} | method: ${details.method} | op: ${operationName}`);
+          }
         }
 
         // Handle POST /submit/
@@ -125,6 +193,10 @@ export function initializeNetworkCapture(): void {
           if (sourceCode) {
             logger.info(`source length: ${sourceCode.length}`);
             
+            // Try to extract contest slug if this is a contest submission
+            const contestMatch = url.match(/\/contest\/(?:api\/)?([^/]+)\//);
+            const contestSlug = contestMatch ? contestMatch[1] : undefined;
+
             // Preserve problemTitle if we already received it from the content script
             const existing = pendingSubmissions.get(tabId);
             const pending: PendingSubmission = {
@@ -133,18 +205,20 @@ export function initializeNetworkCapture(): void {
               problemSlug,
               problemTitle: existing?.problemTitle,
               timestamp: Date.now(),
-              tabId
+              tabId,
+              contestSlug
             };
             
             pendingSubmissions.set(tabId, pending);
           }
         }
         
-        // Handle GET /check/ or /v2/check/
         if (details.method === "GET" && url.includes("/check")) {
           const match = url.match(/\/submissions\/detail\/([^/]+)\/(?:v2\/)?check\/?/);
           if (!match || !match[1]) return;
           const submissionId = match[1];
+          
+          if (submissionId.startsWith("runcode_")) return; // Ignore "Run Code" submissions
           
           if (trackedSubmissionIds.has(submissionId)) return;
           
