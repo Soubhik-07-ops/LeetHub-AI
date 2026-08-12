@@ -12,7 +12,7 @@ const POLLING_INTERVAL_MS = 500;
 
 export function mapLeetCodeStatus(state: string, statusMsg: string): SubmissionStatus | "pending" | "unknown" {
   const normalizedState = state.trim().toUpperCase();
-  const transientStates = ["PENDING", "STARTED", "QUEUED", "JUDGING", "EVALUATING", "RUNNING_TESTS"];
+  const transientStates = ["PENDING", "STARTED", "QUEUED", "JUDGING", "EVALUATING", "RUNNING_TESTS", "COMPILING"];
   
   if (transientStates.includes(normalizedState)) {
     return "pending";
@@ -53,11 +53,10 @@ export async function resolveSubmissionResult(submissionId: string): Promise<Sub
   
   while (attempts < MAX_POLLING_ATTEMPTS) {
     attempts++;
-    logger.info(`Resolver attempt: ${attempts}`);
+    logger.info(`Resolver attempt: ${attempts}/${MAX_POLLING_ATTEMPTS}`);
     
     try {
       const response = await fetch(`https://leetcode.com/submissions/detail/${submissionId}/v2/check/`);
-      logger.info(`Resolver HTTP status: ${response.status}`);
       
       if (response.status === 401 || response.status === 403) {
         logger.info("Resolver authentication failure");
@@ -87,14 +86,15 @@ export async function resolveSubmissionResult(submissionId: string): Promise<Sub
         break; // Terminal error
       }
       
-      logger.info("Resolver response parsed successfully");
-      
       const state = data.state;
       const statusMsg = data.status_msg || "";
       
       const mappedStatus = mapLeetCodeStatus(state, statusMsg);
       
-      logger.info(`Resolver state: ${state}, status_msg: ${statusMsg}`);
+      logger.info(`Resolver state: ${state}`);
+      if (mappedStatus !== "pending") {
+        logger.info(`Resolver status_msg: ${statusMsg}`);
+      }
 
       if (mappedStatus !== "pending") {
         return {

@@ -118,6 +118,89 @@ describe('LeetCode Result Resolver', () => {
       expect(result.status).toBe('accepted');
     });
 
+    it('resolves PENDING -> COMPILING -> SUCCESS + Accepted to accepted', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'PENDING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'COMPILING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'SUCCESS', status_msg: 'Accepted' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect(result.status).toBe('accepted');
+    });
+
+    it('resolves PENDING -> COMPILING -> SUCCESS + Compile Error to rejected', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'PENDING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'COMPILING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'SUCCESS', status_msg: 'Compile Error' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect(result.status).toBe('rejected');
+    });
+
+    it('resolves PENDING -> COMPILING -> SUCCESS + Wrong Answer to rejected', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'PENDING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'COMPILING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'SUCCESS', status_msg: 'Wrong Answer' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      expect(result.status).toBe('rejected');
+    });
+
+    it('resolves PENDING -> RUNNING_TESTS -> SUCCESS + Wrong Answer to rejected', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'PENDING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'RUNNING_TESTS' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'SUCCESS', status_msg: 'Wrong Answer' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      expect(result.status).toBe('rejected');
+    });
+
+    it('resolves PENDING -> QUEUED -> JUDGING -> SUCCESS + Accepted to accepted', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'PENDING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'QUEUED' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'JUDGING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'SUCCESS', status_msg: 'Accepted' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      expect(global.fetch).toHaveBeenCalledTimes(4);
+      expect(result.status).toBe('accepted');
+    });
+
+    it('returns unknown if final attempt is still COMPILING', async () => {
+      (global.fetch as any).mockResolvedValue({ ok: true, json: async () => ({ state: 'COMPILING' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      
+      expect(global.fetch).toHaveBeenCalledTimes(10);
+      expect(result.status).toBe('unknown');
+    });
+
+    it('resolves PENDING -> COMPILING -> RUNNING_TESTS -> SUCCESS + Runtime Error to rejected', async () => {
+      (global.fetch as any)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'PENDING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'COMPILING' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'RUNNING_TESTS' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ state: 'SUCCESS', status_msg: 'Runtime Error' }) });
+      
+      const { resolveSubmissionResult } = await import('../integrations/leetcode/result-resolver.js');
+      const result = await resolveSubmissionResult('12345');
+      expect(result.status).toBe('rejected');
+    });
+
     it('stops polling after max attempts', async () => {
       (global.fetch as any).mockResolvedValue({ ok: true, json: async () => ({ state: 'PENDING' }) });
       
