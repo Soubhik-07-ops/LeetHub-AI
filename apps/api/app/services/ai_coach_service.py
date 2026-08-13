@@ -4,10 +4,12 @@ from typing import Dict, Any, Optional
 from uuid import UUID
 from pydantic import ValidationError
 
+from fastapi import HTTPException
 from app.integrations.supabase.client import get_supabase_client
 from app.integrations.llm.openrouter import OpenRouterProvider
 from app.schemas.ai_coach import AIAnalysisResult
 from app.services.intelligence_service import intelligence_service
+from app.services.ai_usage_service import ai_usage_service
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,11 @@ class AICoachService:
         except Exception:
             weakness_context = "Unknown"
             
+        # 3.5 Reserve Quota
+        is_allowed, usage_id, model = ai_usage_service.reserve_quota(user_id, "analysis")
+        if not is_allowed:
+            raise HTTPException(status_code=429, detail="AI analysis limit reached for your current plan.")
+            
         # 4. Build Prompts
         system_prompt = (
             "You are an expert AI Developer Coach. You analyze LeetCode submissions for time/space complexity, "
@@ -78,7 +85,13 @@ class AICoachService:
         )
         
         # 5. Call LLM
-        raw_json = await self.provider.analyze_submission(prompt, system_prompt)
+        try:
+            raw_json = await self.provider.analyze_submission(prompt, system_prompt, model)
+        except Exception as e:
+            ai_usage_service.finalize_usage(usage_id, "failed")
+            raise e
+            
+        ai_usage_service.finalize_usage(usage_id, "completed")
         
         # 6. Validate Output
         try:
@@ -93,7 +106,7 @@ class AICoachService:
                 "user_id": user_id,
                 "submission_id": submission_id,
                 "provider": "OpenRouter",
-                "model": self.provider.model,
+                "model": model,
                 "prompt_version": self.prompt_version,
                 "analysis_json": validated_result.model_dump()
             }
@@ -135,6 +148,11 @@ class AICoachService:
         except Exception:
             weakness_context = "Unknown"
             
+        # 4.5 Reserve Quota
+        is_allowed, usage_id, model = ai_usage_service.reserve_quota(user_id, "chat")
+        if not is_allowed:
+            raise HTTPException(status_code=429, detail="AI chat limit reached for your current plan.")
+            
         system_prompt = (
             "You are a helpful and concise AI Developer Coach. You help users understand data structures, "
             "algorithms, and their own coding patterns. "
@@ -162,7 +180,13 @@ class AICoachService:
                 logger.error(f"Failed to fetch submission for chat context: {e}")
         
         # 5. Call LLM
-        response_content = await self.provider.generate_chat_response(history, system_prompt)
+        try:
+            response_content = await self.provider.generate_chat_response(history, system_prompt, model)
+        except Exception as e:
+            ai_usage_service.finalize_usage(usage_id, "failed")
+            raise e
+            
+        ai_usage_service.finalize_usage(usage_id, "completed")
         
         # 6. Append Assistant Message
         client.from_("ai_messages").insert({

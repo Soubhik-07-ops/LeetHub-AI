@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     # AI Configuration
     OPENROUTER_API_KEY: Optional[str] = None
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    OPENROUTER_MODEL: str = "openrouter/free"
+    OPENROUTER_FREE_MODEL: str = "openrouter/free"
+    OPENROUTER_PREMIUM_MODEL: str = "google/gemini-pro"
 
     model_config = SettingsConfigDict(
         env_file=".env",

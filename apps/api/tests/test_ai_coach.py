@@ -36,6 +36,12 @@ def mock_provider():
         mock.model = "openrouter/free"
         yield mock
 
+@pytest.fixture
+def mock_usage_service():
+    with patch("app.services.ai_coach_service.ai_usage_service") as mock:
+        mock.reserve_quota.return_value = (True, "mock_usage_id", "test-model")
+        yield mock
+
 def test_analyze_submission_unauthorized():
     global mock_user_id
     mock_user_id = None
@@ -55,7 +61,7 @@ def test_analyze_submission_cross_user(mock_supabase):
     assert response.status_code == 403
     assert "Submission not found or access denied" in response.text
 
-def test_analyze_submission_invalid_schema(mock_supabase, mock_provider, mock_intelligence_service):
+def test_analyze_submission_invalid_schema(mock_supabase, mock_provider, mock_intelligence_service, mock_usage_service):
     # Mocking chain
     mock_sub_res = MagicMock()
     mock_sub_res.data = {
@@ -111,7 +117,7 @@ def test_chat_cross_user(mock_supabase):
     assert response.status_code == 403
     assert "Conversation not found or access denied" in response.text
 
-def test_rate_limiting(mock_supabase, mock_provider, mock_intelligence_service):
+def test_rate_limiting(mock_supabase, mock_provider, mock_intelligence_service, mock_usage_service):
     # Mocking chain to succeed
     mock_sub_res = MagicMock()
     mock_sub_res.data = {

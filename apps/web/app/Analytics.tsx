@@ -31,16 +31,17 @@ export default function Analytics({ session }: { session: any }) {
     const fetchAll = async () => {
       try {
         const headers = { "Authorization": `Bearer ${session.access_token}` };
-        const [overviewRes, topicsRes, difficultyRes, languageRes, contestRes, heatmapRes] = await Promise.all([
+        const [overviewRes, topicsRes, difficultyRes, languageRes, contestRes, heatmapRes, usageRes] = await Promise.all([
           fetch("/api/v1/analytics/overview", { headers }),
           fetch("/api/v1/analytics/intelligence/topics", { headers }),
           fetch("/api/v1/analytics/intelligence/difficulty", { headers }),
           fetch("/api/v1/analytics/intelligence/languages", { headers }),
           fetch("/api/v1/analytics/intelligence/contests", { headers }),
-          fetch("/api/v1/analytics/intelligence/heatmap", { headers })
+          fetch("/api/v1/analytics/intelligence/heatmap", { headers }),
+          fetch("/api/v1/ai/usage", { headers })
         ]);
 
-        if (!overviewRes.ok || !topicsRes.ok || !difficultyRes.ok || !languageRes.ok || !contestRes.ok || !heatmapRes.ok) {
+        if (!overviewRes.ok || !topicsRes.ok || !difficultyRes.ok || !languageRes.ok || !contestRes.ok || !heatmapRes.ok || !usageRes.ok) {
           throw new Error("Failed to load analytics data from server.");
         }
 
@@ -50,7 +51,8 @@ export default function Analytics({ session }: { session: any }) {
           difficulty: await difficultyRes.json(),
           languages: await languageRes.json(),
           contests: await contestRes.json(),
-          heatmap: await heatmapRes.json()
+          heatmap: await heatmapRes.json(),
+          usage: await usageRes.json()
         });
         setLoading(false);
       } catch (e: any) {
@@ -87,7 +89,7 @@ export default function Analytics({ session }: { session: any }) {
   if (error) return <div style={{ color: "#ef4444" }}>{error}</div>;
   if (!data) return null;
 
-  const { overview, topics, difficulty, languages, contests, heatmap } = data;
+  const { overview, topics, difficulty, languages, contests, heatmap, usage } = data;
 
   // Heatmap generation
   const today = new Date();
@@ -139,6 +141,42 @@ export default function Analytics({ session }: { session: any }) {
       </div>
 
       <div className={styles.chartsGrid}>
+        {/* AI Usage Widget */}
+        <div className={styles.chartContainer}>
+          <div className={styles.chartHeader}>
+            <span style={{ textTransform: 'capitalize' }}>{usage.plan}</span> AI Usage
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#cbd5e1' }}>
+                <span>Analysis</span>
+                <span>{usage.analysis.used} / {usage.analysis.limit} {usage.analysis.period === 'daily' ? 'today' : 'this month'}</span>
+              </div>
+              <div style={{ width: '100%', backgroundColor: '#334155', height: '8px', borderRadius: '4px', marginTop: '4px' }}>
+                <div style={{ width: `${Math.min(100, (usage.analysis.used / usage.analysis.limit) * 100)}%`, backgroundColor: usage.analysis.used >= usage.analysis.limit ? '#ef4444' : '#3b82f6', height: '100%', borderRadius: '4px' }}></div>
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#cbd5e1' }}>
+                <span>Chat</span>
+                <span>{usage.chat.used} / {usage.chat.limit} {usage.chat.period === 'daily' ? 'today' : 'this month'}</span>
+              </div>
+              <div style={{ width: '100%', backgroundColor: '#334155', height: '8px', borderRadius: '4px', marginTop: '4px' }}>
+                <div style={{ width: `${Math.min(100, (usage.chat.used / usage.chat.limit) * 100)}%`, backgroundColor: usage.chat.used >= usage.chat.limit ? '#ef4444' : '#10b981', height: '100%', borderRadius: '4px' }}></div>
+              </div>
+            </div>
+            {usage.plan === 'free' ? (
+              <button onClick={() => alert("Premium coming soon!")} style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+                Upgrade to Premium
+              </button>
+            ) : (
+              <button onClick={() => alert("Membership management coming soon!")} style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#334155', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+                Manage Membership
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Topic Radar */}
         {topics.topics.length > 2 && (
           <div className={styles.chartContainer}>

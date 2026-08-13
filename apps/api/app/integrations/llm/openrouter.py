@@ -16,7 +16,6 @@ class OpenRouterProvider(BaseLLMProvider):
         self.api_url = settings.OPENROUTER_BASE_URL
         if not self.api_url.endswith("/chat/completions"):
             self.api_url = self.api_url.rstrip("/") + "/chat/completions"
-        self.model = settings.OPENROUTER_MODEL
         
         self.headers = {
             "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
@@ -79,7 +78,7 @@ class OpenRouterProvider(BaseLLMProvider):
         
         raise RuntimeError("AI Provider unavailable")
 
-    async def analyze_submission(self, prompt: str, system_prompt: str) -> Dict[str, Any]:
+    async def analyze_submission(self, prompt: str, system_prompt: str, model: str) -> Dict[str, Any]:
         if not self.api_key:
             logger.warning("OPENROUTER_API_KEY is missing. Raising error.")
             raise RuntimeError("AI Provider configuration is missing")
@@ -90,7 +89,7 @@ class OpenRouterProvider(BaseLLMProvider):
         ]
         
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": messages,
             "temperature": 0.1,
             "response_format": {"type": "json_object"}
@@ -111,7 +110,7 @@ class OpenRouterProvider(BaseLLMProvider):
             
         return self._extract_json(generated_text)
                 
-    async def generate_chat_response(self, conversation: list[dict], system_prompt: str) -> str:
+    async def generate_chat_response(self, conversation: list[dict], system_prompt: str, model: str) -> str:
         if not self.api_key:
             raise RuntimeError("AI Provider configuration is missing")
             
@@ -123,7 +122,7 @@ class OpenRouterProvider(BaseLLMProvider):
             })
         
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": messages,
             "temperature": 0.7
         }

@@ -9,7 +9,7 @@ interface Message {
   content: string;
 }
 
-export default function ChatView({ token, submissionId }: { token: string, submissionId: string }) {
+export default function ChatView({ token, submissionId, usage, refreshUsage }: { token: string, submissionId: string, usage: any, refreshUsage: () => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +45,7 @@ export default function ChatView({ token, submissionId }: { token: string, submi
       if (data.message) {
         setMessages(prev => [...prev, data.message]);
       }
+      refreshUsage();
     } catch (err: any) {
       setError(err.message || 'Failed to send message.');
       // Remove the optimistic user message on failure so they can try again if they want, 
@@ -90,6 +91,11 @@ export default function ChatView({ token, submissionId }: { token: string, submi
       {error && <div className={styles.errorText} style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
       <div className={styles.chatInputContainer}>
+        {usage && usage.chat.remaining <= 0 && (
+          <div style={{ marginBottom: '0.5rem', color: '#ef4444', fontSize: '0.875rem' }}>
+            You've reached your free AI chat limit. Upgrade to Premium for 300 messages/month.
+          </div>
+        )}
         <div className={styles.chatInputWrapper}>
           <textarea
             className={styles.chatInput}
@@ -97,13 +103,13 @@ export default function ChatView({ token, submissionId }: { token: string, submi
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={isLoading}
+            disabled={isLoading || (usage && usage.chat.remaining <= 0)}
             maxLength={MAX_CHARS + 10} // Allow typing to see limit
           />
           <button 
             className={styles.sendBtn}
             onClick={handleSend}
-            disabled={!input.trim() || input.length > MAX_CHARS || isLoading}
+            disabled={!input.trim() || input.length > MAX_CHARS || isLoading || (usage && usage.chat.remaining <= 0)}
           >
             Send
           </button>

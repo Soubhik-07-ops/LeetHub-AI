@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import styles from './AiCoach.module.css';
-import { analyzeSubmission } from '../../lib/ai-api';
+import { analyzeSubmission, getAiUsage } from '../../lib/ai-api';
 import AnalysisView from './AnalysisView';
 import ChatView from './ChatView';
+import { useEffect } from 'react';
 
 type CoachState = 'IDLE' | 'LOADING' | 'SUCCESS' | 'ERROR';
 
@@ -10,6 +11,20 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
   const [status, setStatus] = useState<CoachState>('IDLE');
   const [data, setData] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [usage, setUsage] = useState<any>(null);
+
+  const fetchUsage = async () => {
+    try {
+      const u = await getAiUsage(token);
+      setUsage(u);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsage();
+  }, []);
 
   // We determine if it was cached by checking if it returned very quickly,
   // or we can just assume if we have data we show it. The backend actually doesn't return
@@ -25,6 +40,7 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
       const result = await analyzeSubmission(submissionId, token);
       setData(result);
       setStatus('SUCCESS');
+      await fetchUsage();
     } catch (e: any) {
       setErrorMsg(e.message || "Failed to analyze submission.");
       setStatus('ERROR');
@@ -37,7 +53,19 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
         <div style={{ marginBottom: '1.5rem', color: '#94a3b8', fontSize: '1.125rem' }}>
           Ready to analyze your submission.
         </div>
-        <button className={styles.analyzeBtn} onClick={handleAnalyze}>
+        {usage && (
+          <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: usage.analysis.remaining > 0 ? '#10b981' : '#ef4444' }}>
+            {usage.analysis.remaining > 0 
+              ? `${usage.analysis.remaining} AI analyses remaining ${usage.analysis.period === 'daily' ? 'today' : 'this month'}` 
+              : `You've reached your free AI analysis limit. Upgrade to Premium for 50 analyses/month.`}
+          </div>
+        )}
+        <button 
+          className={styles.analyzeBtn} 
+          onClick={handleAnalyze}
+          disabled={usage && usage.analysis.remaining <= 0}
+          style={{ opacity: usage && usage.analysis.remaining <= 0 ? 0.5 : 1 }}
+        >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
           </svg>
@@ -73,8 +101,13 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
 
   return (
     <div>
+      {usage && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+          {usage.analysis.remaining} analyses, {usage.chat.remaining} chat messages left
+        </div>
+      )}
       <AnalysisView data={data} />
-      <ChatView token={token} submissionId={submissionId} />
+      <ChatView token={token} submissionId={submissionId} usage={usage} refreshUsage={fetchUsage} />
     </div>
   );
 }

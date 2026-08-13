@@ -93,7 +93,7 @@ async def test_analyze_oversized_response(mock_execute, provider):
     mock_execute.return_value = {"choices": [{"message": {"content": "a" * 10001}}]}
     
     with pytest.raises(RuntimeError, match="Model response exceeded size limits"):
-        await provider.analyze_submission("prompt", "sys")
+        await provider.analyze_submission("prompt", "sys", "test-model")
 
 @pytest.mark.asyncio
 @patch("app.integrations.llm.openrouter.OpenRouterProvider._execute_with_retry")
@@ -101,4 +101,4 @@ async def test_generate_chat_oversized_response(mock_execute, provider):
     mock_execute.return_value = {"choices": [{"message": {"content": "a" * 10001}}]}
     
     with pytest.raises(RuntimeError, match="Model response exceeded size limits"):
-        await provider.generate_chat_response([{"role": "user", "content": "hi"}], "sys")
+        await provider.generate_chat_response([{"role": "user", "content": "hi"}], "sys", "test-model")
