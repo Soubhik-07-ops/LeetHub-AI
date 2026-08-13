@@ -53,3 +53,19 @@ async def get_extension_user_id(credentials: Optional[HTTPAuthorizationCredentia
         raise HTTPException(status_code=401, detail="Invalid extension credential")
         
     return user_id
+
+async def get_current_admin_user(user_id: str = Depends(get_current_user_id)) -> str:
+    """
+    Dependency to verify the authenticated user has the 'admin' role.
+    """
+    supabase = get_supabase_client()
+    try:
+        res = supabase.table("user_roles").select("role").eq("user_id", user_id).eq("role", "admin").execute()
+        if not res.data:
+            raise HTTPException(status_code=403, detail="Admin privileges required")
+        return user_id
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying admin role: {str(e)}")
+        raise HTTPException(status_code=403, detail="Could not verify admin privileges")

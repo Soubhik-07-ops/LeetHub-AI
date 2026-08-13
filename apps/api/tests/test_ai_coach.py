@@ -14,8 +14,11 @@ async def override_get_current_user_id():
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return mock_user_id
 
-app.dependency_overrides[get_current_user_id] = override_get_current_user_id
-
+@pytest.fixture(autouse=True)
+def override_deps():
+    app.dependency_overrides[get_current_user_id] = override_get_current_user_id
+    yield
+    app.dependency_overrides.clear()
 client = TestClient(app)
 
 @pytest.fixture
