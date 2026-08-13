@@ -309,3 +309,31 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+.modalTabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 1rem;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.75rem 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tabBtn:hover {
+  color: #f8fafc;
+}
+
+.tabBtn.activeTab {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}

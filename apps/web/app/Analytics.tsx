@@ -6,6 +6,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import styles from "./Analytics.module.css";
+import AiCoachPanel from '../components/AiCoach/AiCoachPanel';
 
 const DIFFICULTY_COLORS = {
   Easy: '#10b981',
@@ -24,6 +25,7 @@ export default function Analytics({ session }: { session: any }) {
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
   const [modalData, setModalData] = useState<any>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [modalTab, setModalTab] = useState<'DETAILS' | 'AI_COACH'>('DETAILS');
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -61,6 +63,7 @@ export default function Analytics({ session }: { session: any }) {
 
   const openModal = async (leetcodeId: string) => {
     setSelectedSubId(leetcodeId);
+    setModalTab('DETAILS');
     setModalLoading(true);
     try {
       const headers = { "Authorization": `Bearer ${session.access_token}` };
@@ -346,42 +349,63 @@ export default function Analytics({ session }: { session: any }) {
               <div style={{ padding: '2rem', color: '#94a3b8', textAlign: 'center' }}>Fetching details securely...</div>
             ) : modalData ? (
               <div className={styles.modalBody}>
-                <div className={styles.metaGrid}>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Status</span>
-                    <span className={`${styles.badge} ${styles[modalData.status.toLowerCase()] || ''}`} style={{ width: 'fit-content' }}>
-                      {modalData.status}
-                    </span>
+                <div className={styles.modalTabs}>
+                  <button 
+                    className={`${styles.tabBtn} ${modalTab === 'DETAILS' ? styles.activeTab : ''}`}
+                    onClick={() => setModalTab('DETAILS')}
+                  >
+                    Submission Details
+                  </button>
+                  <button 
+                    className={`${styles.tabBtn} ${modalTab === 'AI_COACH' ? styles.activeTab : ''}`}
+                    onClick={() => setModalTab('AI_COACH')}
+                  >
+                    ✨ AI Coach
+                  </button>
+                </div>
+
+                <div style={{ display: modalTab === 'DETAILS' ? 'block' : 'none' }}>
+                  <div className={styles.metaGrid}>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>Status</span>
+                      <span className={`${styles.badge} ${styles[modalData.status.toLowerCase()] || ''}`} style={{ width: 'fit-content' }}>
+                        {modalData.status}
+                      </span>
+                    </div>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>Difficulty</span>
+                      <span className={styles.metaValue}>{modalData.difficulty}</span>
+                    </div>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>Language</span>
+                      <span className={styles.metaValue}>{modalData.language}</span>
+                    </div>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>Date</span>
+                      <span className={styles.metaValue}>{new Date(modalData.submitted_at).toLocaleString()}</span>
+                    </div>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>GitHub Sync</span>
+                      <span className={`${styles.badge} ${styles[modalData.github_sync_status?.toLowerCase()] || ''}`} style={{ width: 'fit-content' }}>
+                        {modalData.github_sync_status}
+                      </span>
+                    </div>
+                    <div className={styles.metaItem}>
+                      <span className={styles.metaLabel}>Topics</span>
+                      <span className={styles.metaValue}>{modalData.topics.join(', ') || 'None'}</span>
+                    </div>
                   </div>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Difficulty</span>
-                    <span className={styles.metaValue}>{modalData.difficulty}</span>
-                  </div>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Language</span>
-                    <span className={styles.metaValue}>{modalData.language}</span>
-                  </div>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Date</span>
-                    <span className={styles.metaValue}>{new Date(modalData.submitted_at).toLocaleString()}</span>
-                  </div>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>GitHub Sync</span>
-                    <span className={`${styles.badge} ${styles[modalData.github_sync_status?.toLowerCase()] || ''}`} style={{ width: 'fit-content' }}>
-                      {modalData.github_sync_status}
-                    </span>
-                  </div>
-                  <div className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Topics</span>
-                    <span className={styles.metaValue}>{modalData.topics.join(', ') || 'None'}</span>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.5rem' }}>
+                    <span className={styles.metaLabel}>Source Code</span>
+                    <div className={styles.codeBlock}>
+                      {modalData.source_code}
+                    </div>
                   </div>
                 </div>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <span className={styles.metaLabel}>Source Code</span>
-                  <div className={styles.codeBlock}>
-                    {modalData.source_code}
-                  </div>
+
+                <div style={{ display: modalTab === 'AI_COACH' ? 'block' : 'none' }}>
+                  <AiCoachPanel submissionId={modalData.id} token={session.access_token} />
                 </div>
               </div>
             ) : (

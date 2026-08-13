@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     GITHUB_APP_PRIVATE_KEY: Optional[str] = None
     GITHUB_APP_SLUG: Optional[str] = None
 
+    # AI Configuration
+    OPENROUTER_API_KEY: Optional[str] = None
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_MODEL: str = "openrouter/free"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
