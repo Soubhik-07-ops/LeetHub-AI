@@ -1,6 +1,6 @@
-# LeetHub-AI Development Roadmap
+# LeetBranch Development Roadmap
 
-This roadmap outlines the incremental phases of development for LeetHub-AI, prioritizing the smallest working vertical slice first and progressively adding complexity.
+This roadmap outlines the incremental phases of development for LeetBranch, prioritizing the smallest working vertical slice first and progressively adding complexity.
 
 ## Phase 1: Core Vertical Slice (MVP)
 **Goal:** Establish the foundational pipeline: LeetCode → Extension → API → GitHub.

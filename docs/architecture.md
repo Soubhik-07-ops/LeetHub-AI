@@ -1,7 +1,7 @@
-# LeetHub-AI Architecture
+# LeetBranch Architecture
 
 ## 1. System Architecture Overview
-LeetHub-AI is composed of several specialized components working together to detect, analyze, and synchronize LeetCode submissions to a GitHub repository, while providing a web dashboard for users to track their progress and analytics.
+LeetBranch is composed of several specialized components working together to detect, analyze, and synchronize LeetCode submissions to a GitHub repository, while providing a web dashboard for users to track their progress and analytics.
 
 The system is organized into a monorepo structure with the following parts:
 - `apps/web`: The main user dashboard.

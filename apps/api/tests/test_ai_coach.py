@@ -33,16 +33,19 @@ def mock_intelligence_service():
 
 @pytest.fixture
 def mock_provider():
-    with patch("app.services.ai_coach_service.ai_coach_service.provider") as mock:
-        mock.analyze_submission = AsyncMock()
-        mock.generate_chat_response = AsyncMock()
-        mock.model = "openrouter/free"
-        yield mock
+    with patch("app.services.ai_coach_service.ai_coach_service.providers") as mock_dict:
+        mock_instance = MagicMock()
+        mock_instance.analyze_submission = AsyncMock()
+        mock_instance.generate_chat_response = AsyncMock()
+        mock_instance.model = "openrouter/free"
+        mock_dict.get.return_value = mock_instance
+        yield mock_instance
 
 @pytest.fixture
 def mock_usage_service():
     with patch("app.services.ai_coach_service.ai_usage_service") as mock:
-        mock.reserve_quota.return_value = (True, "mock_usage_id", "test-model")
+        mock.reserve_quota.return_value = (True, "mock_usage_id", "test-model", "openrouter")
+        mock.get_expected_provider_and_model.return_value = ("openrouter", "test-model")
         yield mock
 
 def test_analyze_submission_unauthorized():
@@ -77,8 +80,10 @@ def test_analyze_submission_invalid_schema(mock_supabase, mock_provider, mock_in
     mock_existing_res.data = [] 
     
     mock_client_instance = mock_supabase.return_value
+    # submission fetch mock
     mock_client_instance.from_.return_value.select.return_value.eq.return_value.eq.return_value.single.return_value.execute.return_value = mock_sub_res
-    mock_client_instance.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value = mock_existing_res
+    # cache fetch mock
+    mock_client_instance.from_.return_value.select.return_value.eq.return_value.gte.return_value.order.return_value.limit.return_value.execute.return_value = mock_existing_res
     
     # Return valid JSON but invalid schema
     mock_provider.analyze_submission.return_value = {"invalid": "schema"}
@@ -133,8 +138,10 @@ def test_rate_limiting(mock_supabase, mock_provider, mock_intelligence_service, 
     mock_existing_res.data = []
     
     mock_client_instance = mock_supabase.return_value
+    # submission fetch mock
     mock_client_instance.from_.return_value.select.return_value.eq.return_value.eq.return_value.single.return_value.execute.return_value = mock_sub_res
-    mock_client_instance.from_.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value = mock_existing_res
+    # cache fetch mock
+    mock_client_instance.from_.return_value.select.return_value.eq.return_value.gte.return_value.order.return_value.limit.return_value.execute.return_value = mock_existing_res
     
     mock_provider.analyze_submission.return_value = {
         "time_complexity": "O(N^2)",

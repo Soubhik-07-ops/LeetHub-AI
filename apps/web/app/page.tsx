@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Analytics from "./Analytics";
 import Integrations from "./Integrations";
-import styles from "./page.module.css";
+import AppLayout from "../components/Layout/AppLayout";
 
 export default function Home() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("OVERVIEW");
   const router = useRouter();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function Home() {
   };
 
   if (loading) {
-    return <div className={styles.page}>Loading...</div>;
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Loading LeetBranch...</div>;
   }
 
   if (!session) {
@@ -48,47 +49,45 @@ export default function Home() {
   // Check Email Verification
   if (!session.user?.email_confirmed_at) {
     return (
-      <div className={styles.page}>
-        <main className={styles.main} style={{ display: 'flex', alignItems: 'center' }}>
-          <div className={styles.centeredCard}>
-            <h1 className={styles.centeredTitle}>Email Verification Required</h1>
-            <p className={styles.centeredText}>
-              Please verify your email address (<span className={styles.verifyEmailHighlight}>{session.user?.email}</span>) to access the dashboard.
-            </p>
-            <p className={styles.centeredText} style={{ fontSize: '0.875rem' }}>
-              Check your inbox for a verification link.
-            </p>
-            <button 
-              onClick={handleLogout}
-              className={styles.signOutBtn}
-              style={{ marginTop: '1rem' }}
-            >
-              Sign Out
-            </button>
-          </div>
-        </main>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-base)' }}>
+        <div style={{ padding: '3rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '12px', textAlign: 'center', maxWidth: '480px' }}>
+          <h1 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 600 }}>Email Verification Required</h1>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+            Please verify your email address (<span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{session.user?.email}</span>) to access the dashboard.
+          </p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+            Check your inbox for a verification link.
+          </p>
+          <button
+            onClick={handleLogout}
+            style={{ padding: '0.625rem 1.25rem', background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>LeetHub-AI Dashboard</h1>
-        <div className={styles.userInfo}>
-          <span className={styles.email}>{session.user.email}</span>
-          <button 
-            onClick={handleLogout}
-            className={styles.signOutBtn}
-          >
-            Sign Out
-          </button>
-        </div>
-      </header>
-      <main className={styles.main}>
-        <Analytics session={session} />
-        <Integrations session={session} />
-      </main>
-    </div>
+    <AppLayout
+      currentTab={activeTab}
+      onTabChange={setActiveTab}
+      email={session.user.email}
+      onSignOut={handleLogout}
+    >
+      {/* We pass the activeTab down to Analytics so it can split Dashboard/AskAI/Analytics.
+          Wait, Analytics currently manages OVERVIEW and ASK_AI itself via a local tab.
+          Let's pass the activeTab from the Sidebar into Analytics. */}
+
+      <div style={{ display: (activeTab === 'OVERVIEW' || activeTab === 'ANALYTICS' || activeTab === 'ASK_AI') ? 'block' : 'none' }}>
+         <Analytics session={session} externalTab={activeTab} />
+      </div>
+
+      <div style={{ display: activeTab === 'INTEGRATIONS' ? 'block' : 'none' }}>
+         <Integrations session={session} />
+      </div>
+
+    </AppLayout>
   );
 }

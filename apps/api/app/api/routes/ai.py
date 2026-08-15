@@ -22,6 +22,7 @@ async def get_usage(user_id: str = Depends(get_current_user_id)):
 async def analyze_submission(
     request: Request,
     submission_id: str,
+    force: bool = False,
     user_id: str = Depends(get_current_user_id)
 ):
     """
@@ -29,7 +30,7 @@ async def analyze_submission(
     Returns structured feedback on complexity, quality, mistakes, and hints.
     """
     try:
-        result = await ai_coach_service.analyze_submission(user_id=user_id, submission_id=submission_id)
+        result = await ai_coach_service.analyze_submission(user_id=user_id, submission_id=submission_id, force=force)
         return result
     except ValueError as e:
         logger.warning(f"Validation error in analyze_submission: {e}")

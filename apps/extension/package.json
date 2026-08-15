@@ -1,5 +1,5 @@
 {
-  "name": "@leethub-ai/extension",
+  "name": "@leetbranch/extension",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,6 +14,6 @@
     "vitest": "^1.0.0"
   },
   "dependencies": {
-    "@leethub-ai/shared": "*"
+    "@leetbranch/shared": "*"
   }
 }

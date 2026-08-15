@@ -1,6 +1,6 @@
-# LeetHub-AI Browser Extension
+# LeetBranch Browser Extension
 
-This is the Manifest V3 Chrome extension for LeetHub-AI. Its primary responsibility is to detect accepted LeetCode submissions directly from the browser, extract relevant problem metadata, and eventually pass this data to the local LeetHub-AI backend for synchronization.
+This is the Manifest V3 Chrome extension for LeetBranch. Its primary responsibility is to detect accepted LeetCode submissions directly from the browser, extract relevant problem metadata, and eventually pass this data to the local LeetBranch backend for synchronization.
 
 ## Extension Architecture
 
@@ -34,7 +34,7 @@ npm run test
 2. Enable **Developer mode** in the top right corner.
 3. Click **Load unpacked** in the top left.
 4. Select the `apps/extension` directory (the folder containing `manifest.json`).
-5. Open a LeetCode problem, open the Chrome Developer Tools Console, and look for `[LeetHub-AI]` logs.
+5. Open a LeetCode problem, open the Chrome Developer Tools Console, and look for `[LeetBranch]` logs.
 
 ## Current Detection Strategy
 

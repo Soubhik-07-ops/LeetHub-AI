@@ -1,6 +1,6 @@
-# GitHub App Setup Guide for LeetHub-AI
+# GitHub App Setup Guide for LeetBranch
 
-To enable true per-user synchronization to GitHub, LeetHub-AI utilizes a GitHub App. This architecture allows users to securely authorize LeetHub-AI to push code to specific repositories without ever handing over their raw passwords or personal access tokens (PATs).
+To enable true per-user synchronization to GitHub, LeetBranch utilizes a GitHub App. This architecture allows users to securely authorize LeetBranch to push code to specific repositories without ever handing over their raw passwords or personal access tokens (PATs).
 
 Follow these instructions to create your GitHub App.
 
@@ -8,12 +8,12 @@ Follow these instructions to create your GitHub App.
 
 1. Go to your GitHub account settings: **Settings > Developer settings > GitHub Apps**.
 2. Click **New GitHub App**.
-3. **GitHub App name**: `LeetHub-AI (Your Name)` or similar.
+3. **GitHub App name**: `LeetBranch (Your Name)` or similar.
 4. **Homepage URL**: `http://localhost:3000` (Update to your production domain later).
 5. **Callback URL**: `http://localhost:8000/api/v1/integrations/github/callback` (Update to your FastAPI production domain later).
 6. **Expire user authorization tokens**: Check this box for added security.
 7. **Request user authorization (OAuth) during installation**: Check this box so the app immediately authenticates the user upon installation.
-8. **Webhook URL**: You can leave this blank and disable webhooks for now, as LeetHub-AI does not currently rely on GitHub Webhooks. (Uncheck "Active").
+8. **Webhook URL**: You can leave this blank and disable webhooks for now, as LeetBranch does not currently rely on GitHub Webhooks. (Uncheck "Active").
 
 ## Step 2: Set Permissions
 
@@ -54,4 +54,4 @@ GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQ...\n----
 
 ## Step 6: Installation Flow
 
-Once the `.env` is updated and the server restarts, users navigating to the dashboard's "Integrations" section will click "Connect GitHub", which redirects them to install the App on their repository. LeetHub-AI will then use dynamic, short-lived tokens to sync their code securely!
+Once the `.env` is updated and the server restarts, users navigating to the dashboard's "Integrations" section will click "Connect GitHub", which redirects them to install the App on their repository. LeetBranch will then use dynamic, short-lived tokens to sync their code securely!

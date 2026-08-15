@@ -6,21 +6,20 @@
 }
 
 .statCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   animation: slideUp 0.5s ease-out;
 }
 
 .statTitle {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -29,25 +28,27 @@
 .statValue {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
 .statValue.green {
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--status-success);
+}
+
+.statContext {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .dashboardSection {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 2rem;
   animation: slideUp 0.6s ease-out;
   animation-fill-mode: both;
+  min-width: 0;
 }
 
 .sectionTitle {
@@ -68,17 +69,21 @@
 }
 
 .chartContainer {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
   min-height: 350px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .chartHeader {
   margin-bottom: 1rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .heatmapContainer {
@@ -109,11 +114,20 @@
   border: 1px solid rgba(255,255,255,0.5);
 }
 
-.heat0 { background-color: rgba(255, 255, 255, 0.05); }
+.heat0 { background-color: var(--bg-surface-hover); }
 .heat1 { background-color: #0e4429; }
 .heat2 { background-color: #006d32; }
 .heat3 { background-color: #26a641; }
 .heat4 { background-color: #39d353; }
+
+.heatmapLegend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: normal;
+  color: var(--text-secondary);
+}
 
 .tableContainer {
   overflow-x: auto;
@@ -188,6 +202,7 @@
   padding: 1rem;
   border-radius: 8px;
   color: #e2e8f0;
+  overflow-wrap: anywhere;
 }
 
 @keyframes slideUp {
@@ -206,13 +221,12 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease-out;
 }
 
 .modalContent {
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 90%;
   max-width: 800px;
@@ -225,7 +239,7 @@
 
 .modalHeader {
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -234,13 +248,13 @@
 .modalTitle {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .closeButton {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0.5rem;
@@ -249,7 +263,7 @@
 }
 
 .closeButton:hover {
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .modalBody {
@@ -336,4 +350,29 @@
 .tabBtn.activeTab {
   color: #3b82f6;
   border-bottom-color: #3b82f6;
+}
+
+@media (max-width: 480px) {
+  .dashboardSection {
+    padding: 1rem;
+  }
+  .chartContainer {
+    padding: 1rem;
+  }
+  .heatmapCell {
+    width: 8px;
+    height: 8px;
+  }
+  .heatmapGrid {
+    gap: 3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .dashboardSection {
+    padding: 0.75rem;
+  }
+  .chartContainer {
+    padding: 0.75rem;
+  }
 }

@@ -1,32 +1,47 @@
 "use client";
 import { useState, useEffect } from "react";
-import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import styles from "./Analytics.module.css";
 import AiCoachPanel from '../components/AiCoach/AiCoachPanel';
 import BillingPanel from '../components/Billing/BillingPanel';
+import DashboardChat from '../components/AiCoach/DashboardChat';
 
 const DIFFICULTY_COLORS = {
-  Easy: '#10b981',
-  Medium: '#f59e0b',
-  Hard: '#ef4444',
-  Unknown: '#64748b'
+  Easy: 'var(--status-success)',
+  Medium: 'var(--status-warning)',
+  Hard: 'var(--status-error)',
+  Unclassified: 'var(--text-muted)'
 };
 
 const CHART_COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899'];
 
-export default function Analytics({ session }: { session: any }) {
+export default function Analytics({ session, externalTab }: { session: any, externalTab: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
   const [modalData, setModalData] = useState<any>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalTab, setModalTab] = useState<'DETAILS' | 'AI_COACH'>('DETAILS');
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isVeryNarrow, setIsVeryNarrow] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsVeryNarrow(window.innerWidth < 480);
+    };
+    // Initialize on mount
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -86,11 +101,43 @@ export default function Analytics({ session }: { session: any }) {
     setModalData(null);
   };
 
-  if (loading) return <div style={{ color: "#94a3b8" }}>Loading analytics engine...</div>;
-  if (error) return <div style={{ color: "#ef4444" }}>{error}</div>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
+        <div style={{ height: '40px', width: '200px', background: 'var(--bg-surface-hover)', borderRadius: '8px', animation: 'pulse 1.5s infinite' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+          {[1,2,3,4].map(i => <div key={i} style={{ height: '100px', background: 'var(--bg-surface-hover)', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />)}
+        </div>
+      </div>
+    );
+  }
+  if (error) return (
+    <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--accent-danger)' }}>
+      {error}
+      <button onClick={() => window.location.reload()} style={{ display: 'block', marginTop: '1rem', padding: '0.5rem 1rem', background: 'var(--bg-surface-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>Try Again</button>
+    </div>
+  );
   if (!data) return null;
 
   const { overview, topics, difficulty, languages, contests, heatmap, usage } = data;
+
+  const normalizedDifficulties = difficulty.difficulties.map((d: any) => ({
+    ...d,
+    difficulty: d.difficulty === 'Unknown' ? 'Unclassified' : d.difficulty
+  }));
+
+  const LANGUAGE_MAP: Record<string, string> = {
+    'cpp': 'C++',
+    'python3': 'Python',
+    'golang': 'Go',
+    'java': 'Java',
+    'javascript': 'JavaScript',
+    'typescript': 'TypeScript'
+  };
+  const normalizedLanguages = languages.languages.map((l: any) => ({
+    ...l,
+    language: LANGUAGE_MAP[l.language] || l.language
+  }));
 
   // Heatmap generation
   const today = new Date();
@@ -119,43 +166,110 @@ export default function Analytics({ session }: { session: any }) {
 
   const recs = generateRecommendations();
 
+  const refreshUsage = async () => {
+    try {
+      const headers = { "Authorization": `Bearer ${session.access_token}` };
+      const usageRes = await fetch("/api/v1/ai/usage", { headers });
+      if (usageRes.ok) {
+        const newUsage = await usageRes.json();
+        setData((prev: any) => ({ ...prev, usage: newUsage }));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
     <div>
-      {/* Overview Stats */}
-      <div className={styles.analyticsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statTitle}>Total Solved</div>
-          <div className={styles.statValue}>{overview.unique_problems || 0}</div>
+      {externalTab === 'OVERVIEW' && (
+      <div>
+        <header className="pageHeader">
+          <h1 className="pageHeaderTitle">Dashboard</h1>
+        </header>
+        {/* Overview Stats */}
+        <div className={styles.analyticsGrid}>
+          <div className={styles.statCard}>
+            <div className={styles.statTitle}>Total Solved</div>
+            <div className={styles.statValue}>{overview.unique_problems || 0}</div>
+            <div className={styles.statContext}>problems solved</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statTitle}>Acceptance Rate</div>
+            <div className={styles.statValue}>{overview.acceptance_rate || 0}%</div>
+            <div className={styles.statContext}>lifetime average</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statTitle}>Current Streak</div>
+            <div className={`${styles.statValue} ${overview.current_streak > 0 ? styles.green : ''}`}>{overview.current_streak || 0}</div>
+            <div className={styles.statContext}>{overview.current_streak > 0 ? 'active streak 🔥' : 'no active streak'}</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={styles.statTitle}>Longest Streak</div>
+            <div className={styles.statValue}>{overview.longest_streak || 0}</div>
+            <div className={styles.statContext}>days in a row</div>
+          </div>
         </div>
-        <div className={styles.statCard}>
-          <div className={styles.statTitle}>Acceptance Rate</div>
-          <div className={styles.statValue}>{overview.acceptance_rate || 0}%</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statTitle}>Current Streak</div>
-          <div className={`${styles.statValue} ${overview.current_streak > 0 ? styles.green : ''}`}>{overview.current_streak || 0} 🔥</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statTitle}>Longest Streak</div>
-          <div className={styles.statValue}>{overview.longest_streak || 0} 🔥</div>
-        </div>
-      </div>
-
-      <div className={styles.chartsGrid}>
         <BillingPanel token={session.access_token} usage={usage} />
 
+        {/* Recent Submissions */}
+        {overview.recent_submissions && overview.recent_submissions.length > 0 && (
+          <div className={styles.dashboardSection} style={{ marginTop: '2rem' }}>
+            <div className={styles.sectionTitle}>Recent Submissions</div>
+            <div className={styles.tableContainer}>
+              <table className={`${styles.table} responsiveTable`}>
+                <thead>
+                  <tr>
+                    <th>Problem</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Sync Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {overview.recent_submissions.slice(0, 10).map((sub: any, i: number) => (
+                    <tr key={i} className={styles.clickableRow} onClick={() => openModal(sub.leetcodeSubmissionId)}>
+                      <td data-label="Problem"><strong>{sub.problemTitle || sub.problemSlug}</strong></td>
+                      <td data-label="Status">
+                        <span className={`${styles.badge} ${styles[sub.status.toLowerCase()] || ''}`}>
+                          {sub.status}
+                        </span>
+                      </td>
+                      <td data-label="Date" style={{ color: 'var(--text-secondary)' }}>
+                        {new Date(sub.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td data-label="Sync">
+                        <span className={`${styles.badge} ${styles[sub.githubSyncStatus?.toLowerCase()] || ''}`}>
+                          {sub.githubSyncStatus || 'Pending'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
+
+      {externalTab === 'ANALYTICS' && (
+      <div>
+        <header className="pageHeader">
+          <h1 className="pageHeaderTitle">Intelligence Analytics</h1>
+        </header>
+        <div className={styles.chartsGrid}>
         {/* Topic Radar */}
         {topics.topics.length > 2 && (
           <div className={styles.chartContainer}>
             <div className={styles.chartHeader}>Topic Proficiency</div>
-            <div style={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer>
-                <RadarChart data={topics.topics.slice(0, 6)}>
+            <div style={{ width: '100%', height: isVeryNarrow ? 240 : 300, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={topics.topics.slice(0, 6)} margin={{ top: 0, right: isVeryNarrow ? 10 : 30, bottom: 0, left: isVeryNarrow ? 10 : 30 }}>
                   <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                  <PolarAngleAxis dataKey="topic" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <PolarAngleAxis dataKey="topic" tick={{ fill: '#94a3b8', fontSize: isVeryNarrow ? 10 : 12 }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                   <Radar name="Acceptance %" dataKey="acceptance_rate" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.5} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc' }} />
+                  <Tooltip allowEscapeViewBox={{ x: false, y: true }} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc' }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -164,26 +278,29 @@ export default function Analytics({ session }: { session: any }) {
 
         {/* Difficulty Pie */}
         <div className={styles.chartContainer}>
-          <div className={styles.chartHeader}>Difficulty Distribution</div>
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
+          <div className={styles.chartHeader}>
+            Difficulty Distribution
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>Historical data may be unclassified</div>
+          </div>
+          <div style={{ width: '100%', height: isVeryNarrow ? 260 : 300, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={difficulty.difficulties}
+                  data={normalizedDifficulties}
                   dataKey="accepted"
                   nameKey="difficulty"
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={isVeryNarrow ? 40 : 60}
+                  outerRadius={isVeryNarrow ? 70 : 100}
                   paddingAngle={5}
                 >
-                  {difficulty.difficulties.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={(DIFFICULTY_COLORS as any)[entry.difficulty] || DIFFICULTY_COLORS.Unknown} />
+                  {normalizedDifficulties.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={(DIFFICULTY_COLORS as any)[entry.difficulty] || DIFFICULTY_COLORS.Unclassified} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc' }} />
-                <Legend />
+                <Tooltip allowEscapeViewBox={{ x: false, y: true }} contentStyle={{ backgroundColor: 'var(--bg-surface-hover)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-primary)' }} />
+                <Legend layout="horizontal" wrapperStyle={{ fontSize: '12px', paddingTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -194,13 +311,13 @@ export default function Analytics({ session }: { session: any }) {
         {/* Language Bar Chart */}
         <div className={styles.chartContainer}>
           <div className={styles.chartHeader}>Language Mastery</div>
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={languages.languages.slice(0, 5)} layout="vertical" margin={{ left: 20, right: 20 }}>
+          <div style={{ width: '100%', height: isVeryNarrow ? 260 : 300, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={normalizedLanguages.slice(0, 5)} layout="vertical" margin={{ left: isVeryNarrow ? 0 : 20, right: isVeryNarrow ? 10 : 20 }}>
                 <XAxis type="number" hide />
-                <YAxis dataKey="language" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc' }} />
-                <Bar dataKey="accepted" fill="#8b5cf6" radius={[0, 4, 4, 0]} name="Solved" barSize={24} />
+                <YAxis dataKey="language" type="category" width={isVeryNarrow ? 60 : 80} axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: isVeryNarrow ? 10 : 12 }} />
+                <Tooltip allowEscapeViewBox={{ x: false, y: true }} contentStyle={{ backgroundColor: 'var(--bg-surface-hover)', border: '1px solid var(--border-color)', borderRadius: 8, color: 'var(--text-primary)' }} />
+                <Bar dataKey="accepted" fill="var(--accent-secondary)" radius={[0, 4, 4, 0]} name="Solved" barSize={isVeryNarrow ? 16 : 24} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -209,13 +326,13 @@ export default function Analytics({ session }: { session: any }) {
         {/* Contest Bar Chart */}
         <div className={styles.chartContainer}>
           <div className={styles.chartHeader}>Contest Performance</div>
-          <div style={{ width: '100%', height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={contests.contests}>
-                <XAxis dataKey="contest_type" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <YAxis hide />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc' }} />
-                <Bar dataKey="accepted" fill="#10b981" radius={[4, 4, 0, 0]} name="Solved" barSize={32} />
+          <div style={{ width: '100%', height: isVeryNarrow ? 260 : 300, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={contests.contests} margin={{ left: isVeryNarrow ? -20 : 0, right: isVeryNarrow ? 10 : 20 }}>
+                <XAxis dataKey="contest_type" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: isVeryNarrow ? 10 : 12 }} />
+                <YAxis tick={{ fill: '#94a3b8', fontSize: isVeryNarrow ? 10 : 12 }} axisLine={false} tickLine={false} />
+                <Tooltip allowEscapeViewBox={{ x: false, y: true }} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: 8, color: '#f8fafc' }} />
+                <Bar dataKey="accepted" fill="#10b981" radius={[4, 4, 0, 0]} name="Solved" barSize={isVeryNarrow ? 24 : 32} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -224,7 +341,19 @@ export default function Analytics({ session }: { session: any }) {
 
       {/* Activity Heatmap */}
       <div className={styles.dashboardSection}>
-        <div className={styles.sectionTitle}>Activity Heatmap</div>
+        <div className={styles.sectionTitle} style={{ marginBottom: '0.5rem' }}>
+          Activity Heatmap
+          <div className={styles.heatmapLegend}>
+            <span>Less</span>
+            <div className={`${styles.heatmapCell} ${styles.heat0}`} />
+            <div className={`${styles.heatmapCell} ${styles.heat1}`} />
+            <div className={`${styles.heatmapCell} ${styles.heat2}`} />
+            <div className={`${styles.heatmapCell} ${styles.heat3}`} />
+            <div className={`${styles.heatmapCell} ${styles.heat4}`} />
+            <span>More</span>
+          </div>
+        </div>
+        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Last 12 months</div>
         <div className={styles.heatmapContainer}>
           <div className={styles.heatmapGrid}>
             {days.map((dateStr, i) => {
@@ -234,11 +363,11 @@ export default function Analytics({ session }: { session: any }) {
               else if (subs > 2 && subs <= 4) heatClass = styles.heat2;
               else if (subs > 4 && subs <= 6) heatClass = styles.heat3;
               else if (subs > 6) heatClass = styles.heat4;
-              
+
               return (
-                <div 
-                  key={dateStr} 
-                  className={`${styles.heatmapCell} ${heatClass}`} 
+                <div
+                  key={dateStr}
+                  className={`${styles.heatmapCell} ${heatClass}`}
                   title={`${subs} submissions on ${dateStr}`}
                 />
               );
@@ -271,7 +400,7 @@ export default function Analytics({ session }: { session: any }) {
         <div className={styles.dashboardSection} style={{ marginBottom: 0 }}>
           <div className={styles.sectionTitle}>Weakness Engine</div>
           <div className={styles.tableContainer}>
-            <table className={styles.table}>
+            <table className={`${styles.table} responsiveTable`}>
               <thead>
                 <tr>
                   <th>Topic</th>
@@ -283,14 +412,14 @@ export default function Analytics({ session }: { session: any }) {
               <tbody>
                 {topics.topics.slice(0, 5).map((t: any, i: number) => (
                   <tr key={i}>
-                    <td>{t.topic}</td>
-                    <td>{t.acceptance_rate}%</td>
-                    <td>
+                    <td data-label="Topic"><strong>{t.topic}</strong></td>
+                    <td data-label="Win Rate">{t.acceptance_rate}%</td>
+                    <td data-label="Status">
                       <span className={`${styles.badge} ${styles[t.strength] || ''}`}>
                         {t.strength}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Confidence">
                       <span className={`${styles.badge} ${styles[t.confidence] || ''}`}>
                         {t.confidence}
                       </span>
@@ -302,43 +431,16 @@ export default function Analytics({ session }: { session: any }) {
           </div>
         </div>
       </div>
-
-      {/* Recent Submissions */}
-      {overview.recent_submissions && overview.recent_submissions.length > 0 && (
-        <div className={styles.dashboardSection} style={{ marginTop: '2rem' }}>
-          <div className={styles.sectionTitle}>Recent Submissions</div>
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Problem</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Sync Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {overview.recent_submissions.slice(0, 10).map((sub: any, i: number) => (
-                  <tr key={i} className={styles.clickableRow} onClick={() => openModal(sub.leetcodeSubmissionId)}>
-                    <td>{sub.problemTitle || sub.problemSlug}</td>
-                    <td>
-                      <span className={`${styles.badge} ${styles[sub.status.toLowerCase()] || ''}`}>
-                        {sub.status}
-                      </span>
-                    </td>
-                    <td style={{ color: '#94a3b8' }}>{new Date(sub.submittedAt).toLocaleDateString()}</td>
-                    <td>
-                      <span className={`${styles.badge} ${styles[sub.githubSyncStatus?.toLowerCase()] || ''}`}>
-                        {sub.githubSyncStatus || 'Pending'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      </div>
       )}
+
+      <div style={{ display: externalTab === 'ASK_AI' ? 'block' : 'none' }}>
+        <DashboardChat
+          token={session.access_token}
+          usage={usage}
+          refreshUsage={refreshUsage}
+        />
+      </div>
 
       {/* Submission Detail Modal */}
       {selectedSubId && (
@@ -355,13 +457,13 @@ export default function Analytics({ session }: { session: any }) {
             ) : modalData ? (
               <div className={styles.modalBody}>
                 <div className={styles.modalTabs}>
-                  <button 
+                  <button
                     className={`${styles.tabBtn} ${modalTab === 'DETAILS' ? styles.activeTab : ''}`}
                     onClick={() => setModalTab('DETAILS')}
                   >
                     Submission Details
                   </button>
-                  <button 
+                  <button
                     className={`${styles.tabBtn} ${modalTab === 'AI_COACH' ? styles.activeTab : ''}`}
                     onClick={() => setModalTab('AI_COACH')}
                   >
@@ -400,7 +502,7 @@ export default function Analytics({ session }: { session: any }) {
                       <span className={styles.metaValue}>{modalData.topics.join(', ') || 'None'}</span>
                     </div>
                   </div>
-                  
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.5rem' }}>
                     <span className={styles.metaLabel}>Source Code</span>
                     <div className={styles.codeBlock}>

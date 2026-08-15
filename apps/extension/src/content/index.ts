@@ -2,7 +2,7 @@ import { logger } from "../lib/logger.js";
 import { observePageNavigation } from "./page-observer.js";
 import { initializeSubmissionDetector } from "./submission-detector.js";
 
-logger.info("LeetHub-AI Content Script initialized");
+logger.info("LeetBranch Content Script initialized");
 
 // Initialize submission detection
 initializeSubmissionDetector();

@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, Any
 from app.integrations.supabase.client import get_supabase_client
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,8 @@ class MembershipService:
             # Fallback to free plan with zero quota if error occurs
             return {
                 "plan": "free",
-                "analysis": {"limit": 5, "used": 5, "remaining": 0, "period": "daily", "reset_at": None},
-                "chat": {"limit": 10, "used": 10, "remaining": 0, "period": "daily", "reset_at": None}
+                "analysis": {"limit": settings.FREE_ANALYSIS_LIMIT, "used": settings.FREE_ANALYSIS_LIMIT, "remaining": 0, "period": "daily", "reset_at": None},
+                "chat": {"limit": settings.FREE_CHAT_LIMIT, "used": settings.FREE_CHAT_LIMIT, "remaining": 0, "period": "daily", "reset_at": None}
             }
 
 membership_service = MembershipService()

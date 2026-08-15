@@ -42,33 +42,34 @@ export default function UsersTab({ session }: { session: any }) {
       </div>
 
       {loading ? (
-        <div style={{ color: '#94a3b8' }}>Loading users...</div>
+        <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+           {[1,2,3].map(i => <div key={i} style={{ height: '60px', background: 'var(--bg-surface)', borderRadius: '8px', animation: 'pulse 1.5s infinite' }} />)}
+        </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-          <thead style={{ backgroundColor: '#0f172a' }}>
+        <table className="responsiveTable" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg-surface)', borderRadius: '12px', overflow: 'hidden' }}>
+          <thead style={{ backgroundColor: 'var(--bg-surface-hover)' }}>
             <tr>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Email / ID</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Joined</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Plan</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>User</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Joined</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Plan</th>
             </tr>
           </thead>
           <tbody>
             {data.map(u => {
               const sub = u.subscriptions?.[0];
               return (
-                <tr key={u.id} style={{ borderBottom: '1px solid #334155' }}>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ fontWeight: '500' }}>{u.email}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{u.id}</div>
+                <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td data-label="User" style={{ padding: '1rem' }}>
+                    <div style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{u.email}</div>
                   </td>
-                  <td style={{ padding: '1rem', color: '#94a3b8' }}>
-                    {new Date(u.created_at).toLocaleDateString()}
+                  <td data-label="Joined" style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                    {new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
-                  <td style={{ padding: '1rem' }}>
+                  <td data-label="Plan" style={{ padding: '1rem' }}>
                     {sub?.status === 'active' ? (
-                      <span style={{ backgroundColor: '#8b5cf6', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>Premium</span>
+                      <span style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)', color: 'var(--accent-secondary)', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>Premium</span>
                     ) : (
-                      <span style={{ backgroundColor: '#334155', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem' }}>Free</span>
+                      <span style={{ backgroundColor: 'var(--bg-surface-hover)', color: 'var(--text-secondary)', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>Free</span>
                     )}
                   </td>
                 </tr>

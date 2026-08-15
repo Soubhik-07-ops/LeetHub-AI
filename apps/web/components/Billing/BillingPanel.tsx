@@ -99,9 +99,9 @@ export default function BillingPanel({ token, usage }: { token: string, usage: a
     <div className={styles.chartContainer} style={{ gridColumn: "1 / -1", minHeight: 'auto' }}>
       <div className={styles.chartHeader}>Membership & AI Usage</div>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '1rem', backgroundColor: '#1e293b', padding: '1.5rem', borderRadius: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '2rem', marginTop: '1rem', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '1.5rem', borderRadius: '12px', minWidth: 0 }}>
         {/* Left Side: AI Usage */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderRight: '1px solid #334155', paddingRight: '2rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
           <div>
             <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '1rem', textTransform: 'capitalize', color: isActive ? '#10b981' : '#cbd5e1' }}>
               {usage?.plan || 'Free'} Plan Usage

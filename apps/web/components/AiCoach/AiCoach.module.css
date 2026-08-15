@@ -18,8 +18,8 @@
 
 /* Common Card Styling */
 .card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1rem;
 }
@@ -41,8 +41,8 @@
   justify-content: center;
   padding: 3rem 1rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-highlight);
   border-radius: 8px;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .analyzeBtn {
-  background: #3b82f6;
+  background: var(--accent-primary);
   color: #ffffff;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -106,7 +106,7 @@
   display: inline-block;
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
+  color: var(--accent-primary);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-family: 'Courier New', Courier, monospace;
@@ -122,18 +122,18 @@
 
 .mistakeItem {
   background: rgba(239, 68, 68, 0.05);
-  border-left: 3px solid #ef4444;
+  border-left: 3px solid var(--status-error);
   padding: 0.75rem 1rem;
   border-radius: 0 4px 4px 0;
 }
 
 .mistakeItem.medium {
-  border-left-color: #f59e0b;
+  border-left-color: var(--status-warning);
   background: rgba(245, 158, 11, 0.05);
 }
 
 .mistakeItem.low {
-  border-left-color: #3b82f6;
+  border-left-color: var(--accent-primary);
   background: rgba(59, 130, 246, 0.05);
 }
 
@@ -197,29 +197,29 @@
 
 .chatMessage.user {
   align-self: flex-end;
-  background: #3b82f6;
+  background: var(--accent-primary);
   color: #ffffff;
 }
 
 .chatMessage.assistant {
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface-hover);
+  border: 1px solid var(--border-highlight);
 }
 
 .chatMessage :global(pre) {
-  background: #0f172a;
+  background: var(--bg-base);
   padding: 0.75rem;
   border-radius: 4px;
   overflow-x: auto;
   margin: 0.5rem 0;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--border-color);
 }
 
 .chatMessage :global(code) {
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.875rem;
-  background: rgba(0,0,0,0.2);
+  background: var(--bg-surface);
   padding: 0.1rem 0.3rem;
   border-radius: 3px;
 }
@@ -242,11 +242,11 @@
 
 .chatInput {
   flex: 1;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-highlight);
   border-radius: 6px;
   padding: 0.75rem;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-family: inherit;
   resize: none;
   min-height: 44px;
@@ -255,7 +255,7 @@
 
 .chatInput:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--accent-primary);
 }
 
 .sendBtn {

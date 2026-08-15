@@ -2,11 +2,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "LeetHub-AI API"
+    PROJECT_NAME: str = "LeetBranch API"
     API_V1_STR: str = "/api/v1"
     
     # Environment Configuration
-    FRONTEND_URL: str = "http://localhost:3000" # Fallback if not configured in .env
+    FRONTEND_URL: str
+    CORS_ORIGINS: str
     REDIS_URL: Optional[str] = None
     
     # Supabase Integration
@@ -24,9 +25,21 @@ class Settings(BaseSettings):
 
     # AI Configuration
     OPENROUTER_API_KEY: Optional[str] = None
-    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    OPENROUTER_FREE_MODEL: str = "openrouter/free"
-    OPENROUTER_PREMIUM_MODEL: str = "google/gemini-pro"
+    OPENROUTER_BASE_URL: str
+    OPENROUTER_FREE_MODEL: str
+    OPENROUTER_PREMIUM_MODEL: str
+
+    # NVIDIA AI Configuration
+    # NVIDIA AI Configuration
+    NVIDIA_API_KEY: Optional[str] = None
+    NVIDIA_BASE_URL: str
+    NVIDIA_MODEL: str
+
+    # Business Rules Limits
+    FREE_ANALYSIS_LIMIT: int = 5
+    FREE_CHAT_LIMIT: int = 10
+    PREMIUM_ANALYSIS_LIMIT: int = 500
+    PREMIUM_CHAT_LIMIT: int = 1000
 
     model_config = SettingsConfigDict(
         env_file=".env",

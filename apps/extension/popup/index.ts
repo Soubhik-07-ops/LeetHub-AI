@@ -20,8 +20,8 @@ const API_BASE = (typeof process !== "undefined" && process.env && process.env.A
     : "http://localhost:8000/api/v1";
 
 async function updateUI() {
-  chrome.storage.sync.get(['leethub_credential'], (syncResult) => {
-    let credential = syncResult.leethub_credential;
+  chrome.storage.sync.get(['leetbranch_credential'], (syncResult) => {
+    let credential = syncResult.leetbranch_credential;
     
     // 1. Optimistic UI Update (Instant)
     renderUI(credential);
@@ -33,7 +33,7 @@ async function updateUI() {
       })
       .then(res => {
         if (!res.ok) {
-          chrome.storage.sync.remove(['leethub_credential'], () => {
+          chrome.storage.sync.remove(['leetbranch_credential'], () => {
             renderUI(null);
           });
         }
@@ -44,14 +44,14 @@ async function updateUI() {
 }
 
 function renderUI(credential: string | null) {
-  chrome.storage.local.get(['leethub_latest_submission'], (localResult) => {
+  chrome.storage.local.get(['leetbranch_latest_submission'], (localResult) => {
     if (credential) {
       connectSection.style.display = 'none';
       connectedSection.style.display = 'block';
       statusText.textContent = 'Connected';
       statusIndicator.className = 'status-indicator status-connected';
       
-      const latest = localResult.leethub_latest_submission;
+      const latest = localResult.leetbranch_latest_submission;
       if (latest) {
         recentSubmissionCard.style.display = 'block';
         subTitle.textContent = latest.problemTitle || latest.problemSlug || "Unknown Problem";
@@ -100,7 +100,7 @@ linkBtn.addEventListener('click', async () => {
 
     const data = await response.json();
     if (data.credential) {
-      chrome.storage.sync.set({ leethub_credential: data.credential }, () => {
+      chrome.storage.sync.set({ leetbranch_credential: data.credential }, () => {
         codeInput.value = '';
         updateUI();
       });
@@ -117,15 +117,15 @@ unlinkBtn.addEventListener('click', () => {
   unlinkBtn.disabled = true;
   unlinkBtn.textContent = 'Disconnecting...';
 
-  chrome.storage.sync.get(['leethub_credential'], (syncResult) => {
-    const credential = syncResult.leethub_credential;
+  chrome.storage.sync.get(['leetbranch_credential'], (syncResult) => {
+    const credential = syncResult.leetbranch_credential;
     if (credential) {
       // Tell backend to revoke the token
       fetch(`${API_BASE}/extension/unlink`, {
         method: 'DELETE',
         headers: { "Authorization": `Bearer ${credential}` }
       }).finally(() => {
-        chrome.storage.sync.remove(['leethub_credential'], () => {
+        chrome.storage.sync.remove(['leetbranch_credential'], () => {
           codeInput.value = '';
           unlinkBtn.disabled = false;
           unlinkBtn.textContent = 'Disconnect';
@@ -133,7 +133,7 @@ unlinkBtn.addEventListener('click', () => {
         });
       });
     } else {
-      chrome.storage.sync.remove(['leethub_credential'], () => {
+      chrome.storage.sync.remove(['leetbranch_credential'], () => {
         codeInput.value = '';
         unlinkBtn.disabled = false;
         unlinkBtn.textContent = 'Disconnect';
@@ -145,7 +145,8 @@ unlinkBtn.addEventListener('click', () => {
 
 if (dashboardBtn) {
   dashboardBtn.addEventListener('click', () => {
-    chrome.tabs.create({ url: "http://localhost:3000" });
+    const FRONTEND_URL = process.env.FRONTEND_URL && process.env.FRONTEND_URL !== '' ? process.env.FRONTEND_URL : "http://localhost:3000";
+    chrome.tabs.create({ url: FRONTEND_URL });
   });
 }
 

@@ -27,50 +27,54 @@ export default function AIUsageTab({ session }: { session: any }) {
   return (
     <div>
       {loading ? (
-        <div style={{ color: '#94a3b8' }}>Loading AI usage...</div>
+        <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+           {[1,2,3].map(i => <div key={i} style={{ height: '60px', background: 'var(--bg-surface)', borderRadius: '8px', animation: 'pulse 1.5s infinite' }} />)}
+        </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-          <thead style={{ backgroundColor: '#0f172a' }}>
+        <table className="responsiveTable" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg-surface)', borderRadius: '12px', overflow: 'hidden' }}>
+          <thead style={{ backgroundColor: 'var(--bg-surface-hover)' }}>
             <tr>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>User Email</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Daily Used</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Monthly Used</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Last Request</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>User Email</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Daily Used</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Monthly Used</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Last Request</th>
             </tr>
           </thead>
           <tbody>
             {data.map(u => (
-              <tr key={u.user_id} style={{ borderBottom: '1px solid #334155' }}>
-                <td style={{ padding: '1rem' }}>{u.email || u.user_id}</td>
-                <td style={{ padding: '1rem' }}>
+              <tr key={u.user_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <td data-label="User" style={{ padding: '1rem' }}>{u.email || u.user_id}</td>
+                <td data-label="Daily" style={{ padding: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {u.current_plan === 'free' ? (
                       <>
-                        <div style={{ width: '100px', height: '8px', backgroundColor: '#334155', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.min((u.daily_used / (u.analysis_limit || 5)) * 100, 100)}%`, height: '100%', backgroundColor: u.daily_used >= (u.analysis_limit || 5) ? '#ef4444' : '#0ea5e9' }} />
+                        <div style={{ width: '100px', height: '8px', backgroundColor: 'var(--bg-surface-hover)', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.min((u.daily_used / (u.analysis_limit || 5)) * 100, 100)}%`, height: '100%', backgroundColor: u.daily_used >= (u.analysis_limit || 5) ? 'var(--status-error)' : 'var(--accent-primary)' }} />
                         </div>
-                        <span>{u.daily_used} / {u.analysis_limit || 5}</span>
+                        <span style={{ fontSize: '0.875rem' }}>{u.daily_used} / {u.analysis_limit || 5}</span>
                       </>
                     ) : (
-                      <span style={{ color: '#94a3b8' }}>Unlimited</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Unlimited</span>
                     )}
                   </div>
                 </td>
-                <td style={{ padding: '1rem' }}>
+                <td data-label="Monthly" style={{ padding: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {u.current_plan === 'premium' ? (
                       <>
-                        <div style={{ width: '100px', height: '8px', backgroundColor: '#334155', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.min((u.monthly_used / (u.analysis_limit || 50)) * 100, 100)}%`, height: '100%', backgroundColor: u.monthly_used >= (u.analysis_limit || 50) ? '#ef4444' : '#3b82f6' }} />
+                        <div style={{ width: '100px', height: '8px', backgroundColor: 'var(--bg-surface-hover)', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.min((u.monthly_used / (u.analysis_limit || 50)) * 100, 100)}%`, height: '100%', backgroundColor: u.monthly_used >= (u.analysis_limit || 50) ? 'var(--status-error)' : 'var(--accent-secondary)' }} />
                         </div>
-                        <span>{u.monthly_used} / {u.analysis_limit || 50}</span>
+                        <span style={{ fontSize: '0.875rem' }}>{u.monthly_used} / {u.analysis_limit || 50}</span>
                       </>
                     ) : (
-                      <span style={{ color: '#94a3b8' }}>N/A</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>N/A</span>
                     )}
                   </div>
                 </td>
-                <td style={{ padding: '1rem', color: '#94a3b8' }}>{u.last_request ? new Date(u.last_request).toLocaleDateString() : 'N/A'}</td>
+                <td data-label="Last Request" style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                  {u.last_request ? new Date(u.last_request).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                </td>
               </tr>
             ))}
             {data.length === 0 && (

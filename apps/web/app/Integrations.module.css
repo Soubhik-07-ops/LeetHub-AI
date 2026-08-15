@@ -27,7 +27,7 @@
 
 .cardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 2rem;
 }
 
@@ -35,12 +35,10 @@
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
-  border: var(--glass-border);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transition: var(--transition-smooth);
 }
 
@@ -121,9 +119,9 @@
 
 .btnSecondary {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface-hover);
   color: var(--text-primary);
-  border: var(--glass-border);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 600;
@@ -133,7 +131,7 @@
 }
 
 .btnSecondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-color);
   border-color: var(--border-highlight);
   transform: translateY(-1px);
 }
@@ -156,12 +154,14 @@
   background: rgba(63, 185, 80, 0.1);
   border: 1px solid rgba(63, 185, 80, 0.2);
   border-radius: 8px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .pairingCodeBox {
   text-align: center;
   padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-base);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -179,7 +179,7 @@
 .selectInput {
   width: 100%;
   padding: 0.875rem 1rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-base);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   border-radius: 8px;
@@ -208,6 +208,7 @@
 .buttonGroup {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .globalMessage {

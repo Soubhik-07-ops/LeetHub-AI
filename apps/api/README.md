@@ -1,6 +1,6 @@
-# LeetHub-AI Backend API
+# LeetBranch Backend API
 
-FastAPI backend for LeetHub-AI.
+FastAPI backend for LeetBranch.
 
 ## Local Development Setup
 
@@ -37,7 +37,7 @@ Successful output:
 {
   "success": true,
   "operation": "created",
-  "path": ".leethub/test/integration-status.md",
+  "path": ".leetbranch/test/integration-status.md",
   "commit_sha": "...",
   "commit_url": "...",
   "error_message": null

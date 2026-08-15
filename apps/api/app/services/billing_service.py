@@ -15,7 +15,7 @@ class BillingService:
             # Fallback default if not seeded
             return {
                 "upi_id": "your-upi-id@upi",
-                "display_name": "LeetHub-AI Premium",
+                "display_name": "LeetBranch Premium",
                 "qr_url": None,
                 "description": "Unlock the full AI Developer Coach"
             }

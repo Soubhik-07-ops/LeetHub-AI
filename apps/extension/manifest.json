@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LeetHub-AI",
+  "name": "LeetBranch",
   "version": "0.1.0",
-  "description": "LeetHub-AI Browser Extension",
+  "description": "LeetBranch Browser Extension",
   "permissions": [
     "storage",
     "webRequest"
@@ -22,6 +22,6 @@
   ],
   "action": {
     "default_popup": "popup/index.html",
-    "default_title": "LeetHub-AI"
+    "default_title": "LeetBranch"
   }
 }

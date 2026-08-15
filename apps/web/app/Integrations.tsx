@@ -174,14 +174,16 @@ export default function Integrations({ session }: { session: any }) {
 
   return (
     <div className={styles.section}>
-      <h2 className={styles.sectionTitle}>Integrations</h2>
+      <header className="pageHeader">
+        <h1 className="pageHeaderTitle">Integrations</h1>
+      </header>
       <div className={styles.cardsGrid}>
         
         {/* Extension Connection */}
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Chrome Extension</h3>
           <p className={styles.cardDesc}>
-            Securely connect your LeetHub-AI extension to this account.
+            Securely connect your LeetBranch extension to this account.
           </p>
           <div className={styles.contentWrapper}>
             {extStatus?.connected ? (

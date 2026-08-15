@@ -14,6 +14,7 @@ class AIAnalysisResult(BaseModel):
     overall_quality: str = Field(..., description="A short sentence evaluating the overall code quality.")
     mistakes: List[Mistake] = Field(default_factory=list, description="List of identified mistakes or inefficiencies.")
     hints: List[str] = Field(default_factory=list, description="Helpful hints for solving or optimizing the problem.")
+    is_cached: Optional[bool] = Field(default=False)
 
 class AIAnalysisRecord(BaseModel):
     id: UUID

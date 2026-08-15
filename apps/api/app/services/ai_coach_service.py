@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from fastapi import HTTPException
 from app.integrations.supabase.client import get_supabase_client
 from app.integrations.llm.openrouter import OpenRouterProvider
+from app.integrations.llm.nvidia import NvidiaProvider
 from app.schemas.ai_coach import AIAnalysisResult
 from app.services.intelligence_service import intelligence_service
 from app.services.ai_usage_service import ai_usage_service
@@ -15,12 +16,15 @@ logger = logging.getLogger(__name__)
 
 class AICoachService:
     def __init__(self):
-        self.provider = OpenRouterProvider()
+        self.providers = {
+            "openrouter": OpenRouterProvider(),
+            "nvidia": NvidiaProvider()
+        }
         self.prompt_version = "v1.5-openrouter-json"
 
-    async def analyze_submission(self, user_id: str, submission_id: str) -> Dict[str, Any]:
+    async def analyze_submission(self, user_id: str, submission_id: str, force: bool = False) -> Dict[str, Any]:
         client = get_supabase_client()
-        
+
         # 1. Verify Ownership & Fetch Source Code
         try:
             sub_res = client.from_("submissions").select("*").eq("id", submission_id).eq("user_id", user_id).single().execute()
@@ -30,16 +34,35 @@ class AICoachService:
         except Exception as e:
             logger.error(f"Error fetching submission: {e}")
             raise ValueError("Submission not found or access denied.")
-            
-        # 2. Check if analysis already exists for this prompt version
-        try:
-            existing = client.from_("ai_analyses").select("*").eq("submission_id", submission_id).eq("prompt_version", self.prompt_version).execute()
-            if existing.data and len(existing.data) > 0:
-                logger.info("Returning cached AI analysis.")
-                return existing.data[0]["analysis_json"]
-        except Exception as e:
-            logger.error(f"Error checking existing analysis: {e}")
-            
+
+        # 2. Compute Input Hash & Check Cache
+        provider_name_expected, expected_model = ai_usage_service.get_expected_provider_and_model(user_id)
+
+        import hashlib
+        import datetime
+
+        raw_hash = f"{user_id}:{submission.get('problem_title', '')}:{submission.get('source_code', '')}:{submission.get('language', '')}:{self.prompt_version}:{expected_model}"
+        input_hash = hashlib.sha256(raw_hash.encode()).hexdigest()
+
+        if not force:
+            try:
+                fifteen_mins_ago = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=15)).isoformat()
+                existing = client.from_("ai_analyses") \
+                    .select("*") \
+                    .eq("input_hash", input_hash) \
+                    .gte("created_at", fifteen_mins_ago) \
+                    .order("created_at", desc=True) \
+                    .limit(1) \
+                    .execute()
+
+                if existing.data and len(existing.data) > 0:
+                    logger.info("Returning cached AI analysis (hit).")
+                    result = existing.data[0]["analysis_json"]
+                    result["is_cached"] = True
+                    return result
+            except Exception as e:
+                logger.error(f"Error checking existing analysis cache: {e}")
+
         # 3. Fetch context (Weaknesses & Trends)
         try:
             topics_data = intelligence_service.get_topic_intelligence(user_id)
@@ -47,12 +70,14 @@ class AICoachService:
             weakness_context = ", ".join(weak_topics) if weak_topics else "None identified yet."
         except Exception:
             weakness_context = "Unknown"
-            
+
         # 3.5 Reserve Quota
-        is_allowed, usage_id, model = ai_usage_service.reserve_quota(user_id, "analysis")
+        is_allowed, usage_id, model, provider_name = ai_usage_service.reserve_quota(user_id, "analysis")
         if not is_allowed:
             raise HTTPException(status_code=429, detail="AI analysis limit reached for your current plan.")
-            
+
+        provider = self.providers.get(provider_name, self.providers["openrouter"])
+
         # 4. Build Prompts
         system_prompt = (
             "You are an expert AI Developer Coach. You analyze LeetCode submissions for time/space complexity, "
@@ -77,48 +102,49 @@ class AICoachService:
             "}\n"
             "Do not include any other text, markdown, or explanations outside the JSON."
         )
-        
+
         prompt = (
             f"Problem: {submission['problem_title']}\n"
             f"SUBMISSION STATUS: {submission['status'].upper()} (THIS IS THE SOURCE OF TRUTH. IF THIS IS NOT 'ACCEPTED', THE CODE IS BROKEN OR INEFFICIENT)\n"
             f"Code:\n{submission['source_code']}"
         )
-        
+
         # 5. Call LLM
         try:
-            raw_json = await self.provider.analyze_submission(prompt, system_prompt, model)
+            raw_json = await provider.analyze_submission(prompt, system_prompt, model)
         except Exception as e:
             ai_usage_service.finalize_usage(usage_id, "failed")
             raise e
-            
+
         ai_usage_service.finalize_usage(usage_id, "completed")
-        
+
         # 6. Validate Output
         try:
             validated_result = AIAnalysisResult(**raw_json)
         except ValidationError as e:
             logger.error(f"LLM returned invalid JSON schema: {e}")
             raise RuntimeError("LLM returned an invalid schema. Please try again.")
-            
+
         # 7. Persist Result
         try:
             analysis_record = {
                 "user_id": user_id,
                 "submission_id": submission_id,
-                "provider": "OpenRouter",
+                "provider": provider_name or "OpenRouter",
                 "model": model,
                 "prompt_version": self.prompt_version,
-                "analysis_json": validated_result.model_dump()
+                "analysis_json": validated_result.model_dump(),
+                "input_hash": input_hash
             }
             client.from_("ai_analyses").insert(analysis_record).execute()
         except Exception as e:
             logger.error(f"Error saving AI analysis to database: {e}")
-            
+
         return validated_result.model_dump()
 
     async def chat(self, user_id: str, message: str, conversation_id: Optional[str] = None, submission_id: Optional[str] = None) -> Dict[str, Any]:
         client = get_supabase_client()
-        
+
         # 1. Resolve Conversation
         if not conversation_id:
             conv_res = client.from_("ai_conversations").insert({"user_id": user_id}).execute()
@@ -128,18 +154,18 @@ class AICoachService:
             conv_res = client.from_("ai_conversations").select("*").eq("id", conversation_id).eq("user_id", user_id).execute()
             if not conv_res.data:
                 raise ValueError("Conversation not found or access denied.")
-                
+
         # 2. Append User Message
         client.from_("ai_messages").insert({
             "conversation_id": conversation_id,
             "role": "user",
             "content": message
         }).execute()
-        
+
         # 3. Get History
         history_res = client.from_("ai_messages").select("role, content").eq("conversation_id", conversation_id).order("created_at", desc=True).limit(10).execute()
         history = history_res.data[::-1] if history_res.data else []
-        
+
         # 4. Fetch Context
         try:
             topics_data = intelligence_service.get_topic_intelligence(user_id)
@@ -147,12 +173,14 @@ class AICoachService:
             weakness_context = ", ".join(weak_topics) if weak_topics else "None identified yet."
         except Exception:
             weakness_context = "Unknown"
-            
+
         # 4.5 Reserve Quota
-        is_allowed, usage_id, model = ai_usage_service.reserve_quota(user_id, "chat")
+        is_allowed, usage_id, model, provider_name = ai_usage_service.reserve_quota(user_id, "chat")
         if not is_allowed:
             raise HTTPException(status_code=429, detail="AI chat limit reached for your current plan.")
-            
+
+        provider = self.providers.get(provider_name, self.providers["openrouter"])
+
         system_prompt = (
             "You are a helpful and concise AI Developer Coach. You help users understand data structures, "
             "algorithms, and their own coding patterns. "
@@ -161,7 +189,7 @@ class AICoachService:
             "CRITICAL RULE: DO NOT output any metadata, safety classifications, or system prefixes (e.g., 'User Safety: safe'). "
             "Just directly answer the user's coding question."
         )
-        
+
         if submission_id:
             try:
                 sub_res = client.from_("submissions").select("*").eq("id", submission_id).eq("user_id", user_id).single().execute()
@@ -178,23 +206,23 @@ class AICoachService:
                     )
             except Exception as e:
                 logger.error(f"Failed to fetch submission for chat context: {e}")
-        
+
         # 5. Call LLM
         try:
-            response_content = await self.provider.generate_chat_response(history, system_prompt, model)
+            response_content = await provider.generate_chat_response(history, system_prompt, model)
         except Exception as e:
             ai_usage_service.finalize_usage(usage_id, "failed")
             raise e
-            
+
         ai_usage_service.finalize_usage(usage_id, "completed")
-        
+
         # 6. Append Assistant Message
         client.from_("ai_messages").insert({
             "conversation_id": conversation_id,
             "role": "assistant",
             "content": response_content
         }).execute()
-        
+
         return {
             "conversation_id": conversation_id,
             "message": {

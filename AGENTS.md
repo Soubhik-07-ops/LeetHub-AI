@@ -1,8 +1,8 @@
-# LeetHub-AI Engineering Guidelines
+# LeetBranch Engineering Guidelines
 
 ## Project
 
-LeetHub-AI is an AI-powered developer productivity platform that synchronizes accepted LeetCode solutions with GitHub while maintaining coding activity analytics and streak tracking.
+LeetBranch is an AI-powered developer productivity platform that synchronizes accepted LeetCode solutions with GitHub while maintaining coding activity analytics and streak tracking.
 
 ## Development Philosophy
 

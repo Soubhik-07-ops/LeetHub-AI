@@ -1,9 +1,9 @@
 # Production Readiness Overview (Phase 6E)
 
-This document outlines the production readiness posture of LeetHub-AI following the Phase 6E Hardening phase.
+This document outlines the production readiness posture of LeetBranch following the Phase 6E Hardening phase.
 
 ## 1. Architecture Overview
-LeetHub-AI uses a decoupled architecture for security and scale:
+LeetBranch uses a decoupled architecture for security and scale:
 - **Chrome Extension (Client)**: Captures user submission intents directly from the browser context. Persists to `chrome.storage.local` before attempting reliable transport to the backend.
 - **Next.js (Web Dashboard)**: Renders the analytics dashboard and manages integrations (GitHub App flow and extension pairing).
 - **FastAPI (Backend)**: Validates incoming payloads, manages Supabase persistence, generates analytics, and orchestrates GitHub synchronization.
@@ -41,7 +41,7 @@ LeetHub-AI uses a decoupled architecture for security and scale:
 ## 8. Threat Model
 - **Token Theft**: If an extension token is stolen, the user can easily "Disconnect" from the dashboard which immediately revokes the credential.
 - **Database Exposure**: RLS prevents an attacker gaining global query access even if an endpoint has a SQL-injection vulnerability (which Pydantic mitigates).
-- **GitHub Abuse**: Scope boundaries (per-repo installation tokens) mean LeetHub-AI cannot accidentally write to a repo it wasn't explicitly granted access to.
+- **GitHub Abuse**: Scope boundaries (per-repo installation tokens) mean LeetBranch cannot accidentally write to a repo it wasn't explicitly granted access to.
 
 ## 9. Failure Modes & Recovery
 - **GitHub Outage**: The backend gracefully flags the `github_sync_status` as `failed` or `skipped`, keeping the `submission` safely inside Supabase. Future retry jobs can be triggered.

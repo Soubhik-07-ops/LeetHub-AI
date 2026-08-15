@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
 INSERT INTO app_settings (key, value)
 VALUES (
     'upi_config', 
-    '{"upi_id": "your-upi-id@upi", "display_name": "LeetHub-AI Premium", "qr_url": null, "description": "Unlock the full AI Developer Coach"}'::jsonb
+    '{"upi_id": "your-upi-id@upi", "display_name": "LeetBranch Premium", "qr_url": null, "description": "Unlock the full AI Developer Coach"}'::jsonb
 )
 ON CONFLICT (key) DO NOTHING;
 

@@ -51,7 +51,7 @@ def test_reserve_quota_success(mock_supabase):
     
     with patch("app.services.ai_usage_service.settings") as mock_settings:
         mock_settings.OPENROUTER_FREE_MODEL = "openrouter/free"
-        is_allowed, usage_id, model = ai_usage_service.reserve_quota("user-123", "analysis")
+        is_allowed, usage_id, model, provider_name = ai_usage_service.reserve_quota("user-123", "analysis")
         
         assert is_allowed is True
         assert usage_id == "usage-123"
@@ -68,7 +68,7 @@ def test_reserve_quota_exhausted(mock_supabase):
         "model_to_use": "free-model-placeholder"
     }]
     
-    is_allowed, usage_id, model = ai_usage_service.reserve_quota("user-123", "analysis")
+    is_allowed, usage_id, model, provider_name = ai_usage_service.reserve_quota("user-123", "analysis")
     assert is_allowed is False
     assert usage_id is None
 

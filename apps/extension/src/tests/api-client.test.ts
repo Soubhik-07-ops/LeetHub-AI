@@ -30,7 +30,7 @@ const mockChromeStorageGet = vi.fn();
 describe('apiClient', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockChromeStorageGet.mockResolvedValue({ leethub_credential: 'test_token' });
+    mockChromeStorageGet.mockResolvedValue({ leetbranch_credential: 'test_token' });
   });
 
   const baseSubmission: CapturedSubmission = {
@@ -89,7 +89,7 @@ describe('apiClient', () => {
     expect(logger.warn).toHaveBeenCalledWith('Backend transport failed (HTTP 500) on attempt 1');
     expect(logger.warn).toHaveBeenCalledWith('Backend transport failed (HTTP 500) on attempt 2');
     expect(logger.warn).toHaveBeenCalledWith('Backend transport failed (HTTP 500) on attempt 3');
-    expect(logger.error).toHaveBeenCalledWith('[LeetHub-AI] Backend transport failed for submission test-123');
+    expect(logger.error).toHaveBeenCalledWith('[LeetBranch] Backend transport failed for submission test-123');
     vi.unstubAllGlobals();
   });
 
@@ -101,7 +101,7 @@ describe('apiClient', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(3);
     expect(logger.warn).toHaveBeenCalledWith('Backend transport failed (Network error) on attempt 1');
-    expect(logger.error).toHaveBeenCalledWith('[LeetHub-AI] Backend transport failed for submission test-123');
+    expect(logger.error).toHaveBeenCalledWith('[LeetBranch] Backend transport failed for submission test-123');
     vi.unstubAllGlobals();
   });
 

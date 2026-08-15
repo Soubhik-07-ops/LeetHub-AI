@@ -35,7 +35,7 @@ export default function Login() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h1 className={styles.title}>LeetHub-AI</h1>
+        <h1 className={styles.title}>LeetBranch</h1>
         <p className={styles.subtitle}>Sign in to view your developer dashboard</p>
 
         {error && <div className={styles.error}>{error}</div>}

@@ -33,11 +33,11 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
   // but to satisfy the requirement subtly, if the response takes < 500ms we can guess it's cached.
   // A better way is to just let the backend handle it. We won't fake it.
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (force: boolean = false) => {
     setStatus('LOADING');
     setErrorMsg(null);
     try {
-      const result = await analyzeSubmission(submissionId, token);
+      const result = await analyzeSubmission(submissionId, token, force);
       setData(result);
       setStatus('SUCCESS');
       await fetchUsage();
@@ -55,14 +55,14 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
         </div>
         {usage && (
           <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: usage.analysis.remaining > 0 ? '#10b981' : '#ef4444' }}>
-            {usage.analysis.remaining > 0 
-              ? `${usage.analysis.remaining} AI analyses remaining ${usage.analysis.period === 'daily' ? 'today' : 'this month'}` 
-              : `You've reached your free AI analysis limit. Upgrade to Premium for 50 analyses/month.`}
+            {usage.analysis.remaining > 0
+              ? `${usage.analysis.remaining} AI analyses remaining ${usage.analysis.period === 'daily' ? 'today' : 'this month'}`
+              : `You've reached your free AI analysis limit. Upgrade to Premium for 500 analyses/month.`}
           </div>
         )}
-        <button 
-          className={styles.analyzeBtn} 
-          onClick={handleAnalyze}
+        <button
+          className={styles.analyzeBtn}
+          onClick={() => handleAnalyze(false)}
           disabled={usage && usage.analysis.remaining <= 0}
           style={{ opacity: usage && usage.analysis.remaining <= 0 ? 0.5 : 1 }}
         >
@@ -94,7 +94,7 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
         </svg>
         <div style={{ color: '#f8fafc', fontSize: '1.125rem', marginBottom: '0.5rem' }}>Analysis Failed</div>
         <div style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>{errorMsg}</div>
-        <button className={styles.analyzeBtn} onClick={handleAnalyze}>Try Again</button>
+        <button className={styles.analyzeBtn} onClick={() => handleAnalyze(false)}>Try Again</button>
       </div>
     );
   }
@@ -104,6 +104,33 @@ export default function AiCoachPanel({ submissionId, token }: { submissionId: st
       {usage && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
           {usage.analysis.remaining} analyses, {usage.chat.remaining} chat messages left
+        </div>
+      )}
+      {data?._is_cached && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          padding: '0.5rem',
+          borderRadius: '4px',
+          marginBottom: '1rem'
+        }}>
+          <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Using recent analysis</span>
+          <button
+            onClick={() => handleAnalyze(true)}
+            style={{
+              background: 'none',
+              border: '1px solid #334155',
+              color: '#f8fafc',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              cursor: 'pointer'
+            }}
+          >
+            Analyze Again
+          </button>
         </div>
       )}
       <AnalysisView data={data} />

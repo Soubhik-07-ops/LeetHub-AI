@@ -27,34 +27,36 @@ export default function AuditLogsTab({ session }: { session: any }) {
   return (
     <div>
       {loading ? (
-        <div style={{ color: '#94a3b8' }}>Loading audit logs...</div>
+        <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+           {[1,2,3].map(i => <div key={i} style={{ height: '60px', background: 'var(--bg-surface)', borderRadius: '8px', animation: 'pulse 1.5s infinite' }} />)}
+        </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-          <thead style={{ backgroundColor: '#0f172a' }}>
+        <table className="responsiveTable" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'var(--bg-surface)', borderRadius: '12px', overflow: 'hidden' }}>
+          <thead style={{ backgroundColor: 'var(--bg-surface-hover)' }}>
             <tr>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Timestamp</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Admin</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Action</th>
-              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid #334155' }}>Target</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Timestamp</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Admin</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Action</th>
+              <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>Target</th>
             </tr>
           </thead>
           <tbody>
             {data.map(log => (
-              <tr key={log.id} style={{ borderBottom: '1px solid #334155' }}>
-                <td style={{ padding: '1rem', color: '#94a3b8' }}>{new Date(log.created_at).toLocaleString()}</td>
-                <td style={{ padding: '1rem', fontWeight: '500' }}>{log.admin?.email || log.admin_user_id}</td>
-                <td style={{ padding: '1rem' }}>
+              <tr key={log.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <td data-label="Time" style={{ padding: '1rem', color: 'var(--text-secondary)' }}>{new Date(log.created_at).toLocaleString('en-GB')}</td>
+                <td data-label="Admin" style={{ padding: '1rem', fontWeight: '500', overflowWrap: 'anywhere' }}>{log.admin?.email || log.admin_user_id}</td>
+                <td data-label="Action" style={{ padding: '1rem' }}>
                   <span style={{ 
                     padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold',
-                    backgroundColor: log.action.includes('reject') ? '#7f1d1d' : log.action.includes('approve') ? '#064e3b' : '#1e3a8a',
-                    color: log.action.includes('reject') ? '#fca5a5' : log.action.includes('approve') ? '#6ee7b7' : '#93c5fd'
+                    backgroundColor: log.action.includes('reject') ? 'rgba(239, 68, 68, 0.1)' : log.action.includes('approve') ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-surface-hover)',
+                    color: log.action.includes('reject') ? 'var(--status-error)' : log.action.includes('approve') ? 'var(--status-success)' : 'var(--text-primary)'
                   }}>
-                    {log.action.toUpperCase()}
+                    {log.action.replace(/_/g, ' ').toUpperCase()}
                   </span>
                 </td>
-                <td style={{ padding: '1rem', color: '#cbd5e1' }}>
-                  <div><span style={{ color: '#64748b' }}>Type:</span> {log.target_type}</div>
-                  <div><span style={{ color: '#64748b' }}>ID:</span> {log.target_id}</div>
+                <td data-label="Target" style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem', overflowWrap: 'anywhere' }}>
+                  <div style={{ fontFamily: 'monospace' }}>Type: {log.target_type}</div>
+                  <div style={{ fontFamily: 'monospace' }}>ID: {log.target_id.slice(0, 8)}...</div>
                 </td>
               </tr>
             ))}
