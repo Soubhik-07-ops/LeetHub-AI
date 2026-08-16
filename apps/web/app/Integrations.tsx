@@ -277,6 +277,23 @@ export default function Integrations({ session }: { session: any }) {
           </div>
         </div>
 
+
+      {/* AI Coach */}
+      <div className={styles.card}>
+        <h3 className={styles.cardTitle}>AI Coach</h3>
+        <p className={styles.cardDesc}>
+          Your server-side AI Developer Coach is available to analyze your accepted submissions.
+        </p>
+        <div className={styles.contentWrapper}>
+          <div className={styles.statusSuccess}>
+            ✓ AI Service Active
+          </div>
+          <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginTop: "1rem" }}>
+            Analyses, complexity insights, and hints are generated dynamically using your configured quota.
+          </p>
+        </div>
+      </div>
+
       </div>
       {msg && <div className={styles.globalMessage}>{msg}</div>}
     </div>

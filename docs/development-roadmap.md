@@ -16,7 +16,7 @@ This roadmap outlines the incremental phases of development for LeetBranch, prio
 **Goal:** Enhance the synchronized repository with AI insights and better file structure.
 
 1. **AI Service Abstraction**: Define the AI provider interface in the backend.
-2. **AI Provider Implementation**: Integrate an initial AI provider (e.g., Gemini or OpenRouter) to analyze time/space complexity and generate a README for the solution.
+2. **AI Provider Implementation**: Integrate an initial AI provider to analyze time/space complexity and generate a README for the solution.
 3. **Repository Organization**: Update the GitHub service to organize commits into structured folders (e.g., by difficulty or topic).
 4. **Update Sync Workflow**: Integrate the AI analysis step into the submission pipeline before the GitHub commit.
 

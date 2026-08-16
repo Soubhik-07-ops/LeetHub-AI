@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 import Analytics from "./Analytics";
 import Integrations from "./Integrations";
+import GettingStarted from "./GettingStarted";
 import AppLayout from "../components/Layout/AppLayout";
 
 export default function Home() {
@@ -86,6 +87,10 @@ export default function Home() {
 
       <div style={{ display: activeTab === 'INTEGRATIONS' ? 'block' : 'none' }}>
          <Integrations session={session} />
+      </div>
+
+      <div style={{ display: activeTab === 'GETTING_STARTED' ? 'block' : 'none' }}>
+         <GettingStarted onNavigate={setActiveTab} />
       </div>
 
     </AppLayout>

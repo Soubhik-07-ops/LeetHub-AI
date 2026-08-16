@@ -47,7 +47,7 @@ The GitHub integration is strictly a server-side responsibility residing in `app
 - *Future production authentication*: Will use GitHub OAuth. The API will store user-specific credentials and repository details securely in the database and inject them into the GitHub service layer per-request.
 
 ### 4.3. AI Service Boundary
-AI processing is abstracted behind an internal interface in the backend. The core logic defines the input (code + problem metadata) and expected output (analysis structure). The actual implementation can easily swap between providers like OpenRouter, Gemini, or OpenAI without affecting the rest of the system.
+AI processing is abstracted behind an internal interface in the backend. The core logic defines the input (code + problem metadata) and expected output (analysis structure). The actual implementation can easily swap between different server-side AI providers without affecting the rest of the system.
 
 ### 4.4. Authentication Boundary
 Authentication is centrally managed by the API. The Web app and Extension authenticate via secure tokens (e.g., JWT). The extension must maintain a secure session to attribute submissions to the correct user.

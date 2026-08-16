@@ -1,251 +1,321 @@
 # LeetBranch
 
-LeetBranch is an open-source, AI-powered platform that automatically synchronizes your accepted LeetCode solutions to a GitHub repository, enriching them with AI-generated analysis, complexity metrics, and personalized coaching.
-
-The platform consists of a Chrome extension that detects your LeetCode submissions in real-time, a Python backend that processes and synchronizes the code, and a Next.js dashboard that visualizes your coding progress and provides an interactive AI Developer Coach.
+LeetBranch is a developer productivity platform that automatically captures LeetCode submissions, organizes solutions, synchronizes them with GitHub, and provides analytics and an AI-powered Developer Coach.
 
 ## Features
 
-- **LeetCode Integration**: Automatically detects and captures accepted LeetCode submissions.
-- **GitHub Synchronization**: Pushes your solutions to a structured GitHub repository with an AI-generated Markdown README.
-- **Analytics Dashboard**: Tracks your coding activity, streaks, topic proficiency, and difficulty distribution.
-- **AI Developer Coach**: Provides structured feedback on your code's time/space complexity, readability, and potential edge cases.
-- **AI Chat**: An interactive chat interface to discuss your specific code submission and explore alternative approaches.
-- **Premium Quotas & Limits**: Built-in support for free and premium tiers, metering AI analysis and chat quotas securely on the server.
-- **AI Caching**: Submissions that have already been analyzed are cached for 15 minutes to prevent redundant API calls and save quota.
-- **Analyze Again**: Allows you to explicitly bypass the cache and regenerate the analysis using the latest model.
-- **Admin Console**: A dedicated view to monitor system usage, approve manual premium payments, and manage user subscriptions.
+- Automatic LeetCode submission capture
+- Accepted/rejected result detection
+- Problem metadata
+- Topic and difficulty classification
+- POTD support
+- Weekly contest support
+- Biweekly contest support
+- GitHub synchronization
+- Duplicate submission handling
+- Submission history
+- Developer analytics
+- Activity heatmap
+- Topic strengths/weaknesses
+- Difficulty analytics
+- Language analytics
+- Contest analytics
+- AI Developer Coach
+- AI analysis caching
+- Free/Premium AI quotas
+- Manual Premium membership workflow
+- Admin console
+- Usage monitoring
+- Secure authentication
+- Row Level Security
 
-## Architecture
-
-The system is built on a scalable, modern technology stack, divided into the following layers:
+## How LeetBranch Works
 
 ```mermaid
-graph TD
-    A[Chrome Extension] -->|Sends Submission| B(Backend API)
-    B -->|Syncs Code| C[GitHub API]
-    B -->|Authenticates| D[Supabase Auth]
-    B -->|Saves State| E[(Supabase PostgreSQL)]
-    B -->|Delegates Analysis| F[AI Coach Service]
-    F -->|Routes Request| G{Provider Resolution}
-    G -->|Free User| H[OpenRouter API]
-    G -->|Premium User| I[NVIDIA Nemotron API]
+flowchart TD
+    A[User creates account] --> B[Installs LeetBranch Chrome extension]
+    B --> C[Connects extension with LeetBranch]
+    C --> D[Connects GitHub]
+    D --> E[Opens LeetCode]
+    E --> F[Solves a problem]
+    F --> G[Submits solution]
+    G --> H[Extension detects submission]
+    H --> I[LeetBranch resolves final result]
+    I --> J[Submission metadata + source code are sent securely]
+    J --> K[Submission is stored]
+    K --> L[GitHub synchronization runs]
+    L --> M[Dashboard analytics update]
+    M --> N[AI Coach can analyze the submission]
 ```
 
-### Provider Resolution
-Provider selection is securely enforced on the server-side to prevent client manipulation:
-- **FREE users**: Routed to OpenRouter (using efficient, capable open models).
-- **PREMIUM users**: Routed to NVIDIA Nemotron APIs for state-of-the-art reasoning and performance.
-- **Expired Premium**: Automatically gracefully falls back to the Free tier (OpenRouter).
+When you solve and submit a problem on LeetCode normally, the browser extension detects the submission. LeetBranch determines the final result (e.g., Accepted). The metadata and source code are securely transmitted to the backend, stored in the database, and automatically synchronized to your configured GitHub repository. Your dashboard analytics update immediately, and the AI Developer Coach becomes available to analyze your solution.
 
-## AI Quotas & Limits
+## How to Use LeetBranch
 
-Server-side limits are rigorously enforced to prevent abuse:
-- **FREE Tier**: 5 Analyses / Day, 10 Chats / Day
-- **PREMIUM Tier**: 50 Analyses / Month, 300 Chats / Month
+### Step 1 — Create an account
+Navigate to the LeetBranch application and register or sign in using your email address. Follow the verification steps if necessary.
 
-## AI Caching
+### Step 2 — Install the Chrome extension
+To install the extension locally:
+1. Build the extension using `npm run build` in the `apps/extension` directory.
+2. Open Chrome and navigate to `chrome://extensions`.
+3. Enable **Developer Mode** in the top right corner.
+4. Click **Load unpacked** and select the built extension directory (`apps/extension/dist`).
+5. *Note: Remember to reload the extension here whenever you rebuild it.*
 
-To optimize API usage and provide a snappy user experience:
-- A `15-minute` cache TTL is enforced for AI requests.
-- The input is hashed deterministically based on the user ID, submission code, problem ID, programming language, model, and prompt version.
-- **Cache hits do NOT consume user quotas**.
-- Users can trigger a fresh analysis by clicking "Analyze Again", bypassing the cache but consuming quota.
+### Step 3 — Connect the extension
+1. Open the LeetBranch dashboard and navigate to **Integrations**.
+2. Under the Chrome Extension section, click **Generate Pairing Code**.
+3. Open the installed LeetBranch Chrome extension popup and enter the pairing code.
+4. The extension is now securely connected to your account.
 
-## Security Architecture
+### Step 4 — Connect GitHub
+1. In the **Integrations** page of the LeetBranch dashboard, click **Connect GitHub**.
+2. Follow the authorization flow to install the GitHub App.
+3. Once authorized, return to the Integrations page and select a repository from the dropdown menu to sync your solutions to.
 
-- **Environment Variables**: No secrets or API keys are exposed to the frontend or extension.
-- **Authentication**: JWT-based authentication via Supabase Auth.
-- **Authorization & RLS**: All API endpoints and database tables are protected. Supabase Row Level Security (RLS) ensures users can only access their own submissions, analytics, and AI histories.
-- **Admin Guards**: Administrative operations are locked behind backend validation of the `admin` role.
-- **IDOR Protections**: The API explicitly filters all queries (like `GET /submissions/{id}`) by the authenticated `user_id`.
+### Step 5 — Solve normally on LeetCode
+You do not need to manually upload any solutions. Simply use LeetCode as you normally would. When you submit a problem, LeetBranch handles the rest automatically in the background.
 
-## Technology Stack
+### Step 6 — Understand submission states
+LeetBranch tracks the final outcome of your submissions. Temporary LeetCode judging states (Pending, Judging) are handled internally until a final state is reached. Supported states include:
+- Accepted
+- Rejected
+- Compile Error
+- Runtime Error
+- Wrong Answer
 
-### Frontend
-- Next.js (App Router)
-- React
-- CSS Modules
-- Recharts (for Analytics)
+*Note: Running code ("Run Code") is not treated as a final submission and is not captured.*
 
-### Backend
-- Python 3
-- FastAPI
-- HTTPX (Async Network Requests)
+### Step 7 — View analytics
+Your LeetBranch dashboard provides comprehensive analytics on your performance, including:
+- Total solved and Acceptance rate
+- Current Streak and Activity heatmap
+- Difficulty and Languages breakdown
+- Topics and Weakness analysis
+- Contest performance
+- Recent submissions history
 
-### Database
-- Supabase (PostgreSQL)
+### Step 8 — Use AI Developer Coach
+1. Open any accepted submission from your dashboard.
+2. Navigate to the **AI Coach** tab.
+3. Request an analysis to review time/space complexity, common mistakes, and hints.
+4. Chat with the coach for further questions or optimizations.
+5. Use "Analyze Again" if you need a fresh analysis.
 
-### Extension
-- Chrome Extension (Manifest V3)
-- TypeScript
-- ESBuild
+## AI Cache Behavior
 
-## Prerequisites
+Identical analysis requests may use a recent server-side cached analysis for a limited period. This behavior:
+- Reduces unnecessary AI requests.
+- Improves response time.
+- Preserves your AI quota.
 
-Before setting up the project, ensure you have the following installed:
-- Node.js (v18 or higher)
-- npm
-- Python (v3.10 or higher)
-- A Supabase account and project
-- GitHub App credentials
-- OpenRouter API Key (for Free tier)
-- NVIDIA API Key (for Premium tier)
+If you modify your code or need a completely fresh perspective, use the "Analyze Again" option to bypass the cache.
 
-## Installation
+## Free vs Premium
+
+LeetBranch offers two tiers for the AI Developer Coach:
+
+### Free
+- Free AI access
+- Limited monthly/daily usage according to the system configuration
+- Standard AI experience
+
+### Premium
+- Premium AI access
+- 500 AI analyses per month
+- 1000 AI chat messages per month
+- Premium membership status
+- Higher AI usage allowance
+
+*Note: The AI Provider and model selection are handled entirely server-side. Pricing is controlled by the administrator and displayed dynamically within the application.*
+
+## Premium Purchase Workflow
+
+To upgrade to Premium:
+1. Open **Premium Membership** in the LeetBranch dashboard.
+2. View the current Premium price and the configured UPI information (or QR code).
+3. Complete the payment using your preferred UPI application.
+4. Enter the transaction/reference ID into the payment request form.
+5. Submit the payment request.
+6. Wait for administrator verification. Once approved, Premium becomes active immediately.
+7. If rejected, you can review the status and submit again according to the application's rules.
+
+## Premium Expiration
+
+When your Premium membership expires:
+- Premium access ends, and you return to the Free plan.
+- The AI provider/model selection gracefully falls back to the Free tier configuration handled server-side.
+- Free quotas apply again.
+- All your existing data, analyses, and synchronized solutions remain fully available.
+
+## Admin Console
+
+Administrators have access to a secure server-side console to manage:
+- Dashboard metrics and AI usage
+- Users and Subscriptions
+- Payments and UPI configuration
+- Premium pricing
+- Audit logs
+
+*Administrative access is protected strictly server-side.*
+
+## Troubleshooting
+
+### Extension not detecting submissions
+Check the following:
+- The extension is loaded and active.
+- Correct permissions are granted in Chrome.
+- LeetCode is open on a supported problem page.
+- The extension is connected (verify status in the popup).
+- The extension has been reloaded after any local rebuild.
+
+### GitHub sync not happening
+Check the following:
+- Your GitHub connection status in the Integrations page.
+- The repository configuration is correctly saved.
+- The Sync status in your dashboard.
+- GitHub authorization is still valid.
+
+### AI Coach unavailable
+Check the following:
+- Your login session is active.
+- You have remaining AI usage quota.
+- Your Premium status (if applicable).
+- Backend availability (if self-hosting).
+- Environment configuration (if self-hosting).
+
+### Premium payment pending
+Manual payments require administrator verification. Please wait for an admin to review and approve your transaction ID.
+
+## Self-Hosting Guide
+
+### Requirements
+- Node.js (v18+)
+- Python (v3.10+)
+- PostgreSQL (via Supabase)
+- Git
+- Chrome/Chromium for extension development
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/LeetBranch.git
+git clone https://github.com/Soubhik-07-ops/LeetBranch.git
 cd LeetBranch
 ```
 
-### 2. Backend Setup
+### 2. Install dependencies
+Backend:
 ```bash
 cd apps/api
 python -m venv venv
-
-# Activate the virtual environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Frontend Setup
+Frontend:
 ```bash
-cd ../web
+cd apps/web
 npm install
 ```
 
-### 4. Extension Setup
+Extension:
 ```bash
-cd ../extension
+cd apps/extension
 npm install
-npm run build
 ```
 
-## Environment Variables
+### 3. Environment Variables
 
-You must supply the following environment variables in `apps/api/.env` and `apps/web/.env.local`.
+Create `.env` files in both the API and Web directories based on the provided `.env.example` files.
 
-### `apps/api/.env`
-| Variable | Required | Description | Where Used |
-|----------|----------|-------------|------------|
-| `FRONTEND_URL` | Yes | The URL of the Next.js web application (e.g., `http://localhost:3000`) | CORS & OAuth redirects |
-| `CORS_ORIGINS` | Yes | Comma-separated list of allowed origins | FastAPI CORS |
-| `SUPABASE_URL` | Yes | Your Supabase project URL | Database operations |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Your Supabase Service Role Key | Bypassing RLS for admin operations |
-| `GITHUB_APP_ID` | Yes | The ID of your GitHub App | GitHub Sync |
-| `GITHUB_APP_CLIENT_ID` | Yes | Client ID of your GitHub App | GitHub Sync |
-| `GITHUB_APP_CLIENT_SECRET`| Yes | Client Secret of your GitHub App | GitHub Sync |
-| `GITHUB_APP_PRIVATE_KEY` | Yes | The private key content for your GitHub App | GitHub Sync authentication |
-| `GITHUB_APP_SLUG` | Yes | The slug of your GitHub app (e.g., `leetbranch-app`) | GitHub Installation links |
-| `OPENROUTER_API_KEY` | Yes | Your OpenRouter API key | Free tier AI |
-| `OPENROUTER_BASE_URL` | Yes | OpenRouter endpoint (`https://openrouter.ai/api/v1`) | Free tier AI |
-| `OPENROUTER_FREE_MODEL` | Yes | OpenRouter model string (e.g., `meta-llama/llama-3.1-8b-instruct`) | Free tier AI |
-| `NVIDIA_API_KEY` | Yes | Your NVIDIA API key | Premium tier AI |
-| `NVIDIA_BASE_URL` | Yes | NVIDIA endpoint (`https://integrate.api.nvidia.com/v1`) | Premium tier AI |
-| `NVIDIA_MODEL` | Yes | NVIDIA model string (e.g., `nvidia/nemotron-4-340b-instruct`) | Premium tier AI |
+**Backend (`apps/api/.env`)**:
+- `SUPABASE_URL`: Your Supabase project URL.
+- `SUPABASE_KEY`: Your Supabase service key (Keep this strictly on the backend).
+- `JWT_SECRET`: Secret used for signing JWTs.
+- `GITHUB_CLIENT_ID`: Your GitHub App client ID.
+- `GITHUB_CLIENT_SECRET`: Your GitHub App client secret (Backend only).
+- `GITHUB_PRIVATE_KEY`: Your GitHub App private key (Backend only).
+- `WEB_URL`: The URL of your frontend dashboard.
+- AI Provider API Keys: Server-side API keys required for Free and Premium AI provider configurations. Do not expose these to the frontend.
 
-### `apps/web/.env.local`
-| Variable | Required | Description | Where Used |
-|----------|----------|-------------|------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Your Supabase project URL | Supabase Auth (Frontend) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Your Supabase Anon Key | Supabase Auth (Frontend) |
-| `NEXT_PUBLIC_API_URL` | Yes | Backend API URL (e.g., `http://localhost:8000/api/v1`) | API fetching |
+**Frontend (`apps/web/.env`)**:
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key.
+- `NEXT_PUBLIC_API_URL`: The URL of your backend API.
 
-## Supabase Setup
-1. Create a new project on [Supabase](https://supabase.com/).
-2. Copy the Project URL, Anon Key, and Service Role Key.
-3. Link your Supabase project locally using the Supabase CLI, or execute the SQL files in `apps/api/app/integrations/supabase/` sequentially (starting from `schema.sql` and then `002_*.sql`, etc.) in the Supabase SQL Editor.
-4. The migrations will automatically create all tables, apply Row Level Security (RLS) policies, insert seed data (such as billing plans), and define secure RPCs for atomic operations.
+*Note: Secrets such as Database passwords, GitHub private keys, and AI API keys belong ONLY on the backend.*
 
-## AI Provider Setup
-- **OpenRouter**: Visit [OpenRouter](https://openrouter.ai/) to generate an API key.
-- **NVIDIA**: Visit the [NVIDIA API Catalog](https://build.nvidia.com/) to generate an API key.
+### 4. Database Setup (Supabase)
+Run the SQL migrations located in `apps/api/app/integrations/supabase/` against your PostgreSQL database.
+Migrations must be applied in the intended order:
+- `002_schema.sql`
+- `004_...`
+- `005_...`
+- `006_...`
+- `007_...`
+- `008_...`
+- `009_...`
+- `010_...`
+- `011_...`
+- `012_manual_payments.sql`
+- `013_admin_views.sql`
+- `014_admin_usage.sql`
+- `015_premium_limits_and_cache.sql`
 
-## GitHub Integration
-1. Go to your GitHub Developer Settings and create a new **GitHub App**.
-2. Give it permissions to read/write `Contents` and read `Metadata`.
-3. Generate a Private Key (`.pem`) and copy the App ID, Client ID, and Client Secret into your `apps/api/.env`.
-4. Ensure the `.pem` file is not tracked by Git, or directly supply its contents into the `GITHUB_APP_PRIVATE_KEY` environment variable.
+Row Level Security (RLS) is an integral part of the security model and is enforced by these migrations.
 
-## Chrome Extension Installation
-1. After running `npm run build` in `apps/extension`, the output will be generated in `apps/extension/dist`.
-2. Open Chrome and go to `chrome://extensions/`.
-3. Enable **Developer Mode** in the top right.
-4. Click **Load unpacked** and select the `apps/extension/` folder.
-5. Log into the LeetBranch Web Dashboard, copy the pairing code from the Integrations tab, and paste it into the Chrome Extension popup to link it securely.
+### 5. Chrome Extension Development
+The extension source code is located in `apps/extension`.
+- To build the extension: `npm run build`
+- To connect it to your local backend, update the API URL in the extension configuration.
+- Load the unpacked extension from `apps/extension/dist` via `chrome://extensions`.
+- Submission capture works by detecting the LeetCode API responses and DOM state.
+- Synchronization is triggered via secure authenticated requests to the backend API.
 
-## Running Locally
+## Architecture
 
-### Backend
-```bash
-cd apps/api
-# Ensure your virtual environment is active
-uvicorn app.main:app --reload --port 8000
+```mermaid
+flowchart TD
+    A[Chrome Extension] -->|Secure REST| B[FastAPI Backend]
+    B -->|Database queries| C[(Supabase)]
+    B -->|Commits| D[GitHub]
+    B -->|Server-side processing| E[Server-side AI provider abstraction]
+    F[Next.js Dashboard] -->|API Requests| B
 ```
+- **Chrome Extension**: Detects submissions on LeetCode.
+- **FastAPI Backend**: The central orchestrator handling authentication, integrations, AI analysis routing, and synchronization.
+- **Supabase**: Relational database handling users, submissions, streaks, analytics, and RLS.
+- **GitHub Integration**: Synchronizes verified solutions to the user's repository.
+- **Next.js Dashboard**: The public-facing interface for viewing progress and analytics.
 
-### Frontend
-```bash
-cd apps/web
-npm run dev
-```
+## Security
 
-## Testing
-
-### Backend
-```bash
-cd apps/api
-pytest -v
-```
-
-### Frontend
-```bash
-cd apps/web
-npx tsc --noEmit
-npm run build
-```
-
-## Production Build
-
-To build the frontend for production deployment:
-```bash
-cd apps/web
-npm run build
-npm start
-```
-The FastAPI backend can be run using a production ASGI server like Gunicorn or Uvicorn workers.
-
-## Security Guidelines
-
-- **Never** commit `.env`, `.env.local`, `.env.production` files.
-- **Never** commit `.pem`, `.key`, or any private credential files.
-- **Never** expose `SUPABASE_SERVICE_ROLE_KEY` to the frontend or extension.
-- **Rotate** any compromised credentials immediately.
-- Use `environment variables` exclusively for secret management.
+LeetBranch employs robust security practices:
+- **JWT Authentication**: Secure token-based access.
+- **Server-Side Identity Resolution**: Prevents IDOR (Insecure Direct Object Reference).
+- **Supabase RLS**: Database-level Row Level Security limits access strictly to the data owner.
+- **Admin Authorization**: Administrative actions are protected by strict server-side role checks.
+- **Server-Side AI Provider Selection**: Prevents clients from forcing specific AI models or manipulating routing.
+- **Server-Side Quota Enforcement**: API rate limiting and AI quotas are enforced centrally.
+- **Input & Output Validation**: All external inputs and AI outputs are strictly validated.
+- **No Client-Side API Keys**: AI keys, GitHub keys, and database credentials exist only on the backend.
+- **Audit Logs**: Administrative actions and payment changes are logged.
+- **Cache Isolation**: The AI analysis cache is strictly scoped and isolated.
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes and run the tests (`pytest -v` and `npx tsc --noEmit`)
-4. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes
+4. Run backend tests: `cd apps/api && pytest -v`
+5. Run frontend tests: `cd apps/web && npm run build` (typecheck)
+6. Run extension tests: `cd apps/extension && npm run build && npm test`
+7. Check git diff for whitespace/formatting issues
+8. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Copyright (c) 2026 Soubhik Roy
 
-## Author
-
-**Soubhik Roy**
-
-## Project Status
-
-**Production Ready**
-LeetBranch is fully stable, tested, and actively maintained as an open-source tool.
+Project: LeetBranch
+GitHub: [https://github.com/Soubhik-07-ops/LeetBranch](https://github.com/Soubhik-07-ops/LeetBranch)
